@@ -51,4 +51,4 @@ app.use("/api/dieta-alimento-detalle", dietaAlimentoDetalleRoutes);
 app.use("/api/cumplimiento-dieta", cumplimientoDietaRoutes);
 app.use("/api/auth", authRoutes);
 
-export default app;
+module.exports = app;
