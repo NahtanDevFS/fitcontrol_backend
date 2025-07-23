@@ -8,6 +8,7 @@ import usuarioRoutes from "./routes/usuario.route";
 import rutinaRoutes from "./routes/rutina.route";
 import rutinaDiaRoutes from "./routes/rutina_dia_semana.route";
 import rutinaDiaEjercicioRoutes from "./routes/rutina_dia_semana_ejercicio.route";
+import progresoUsuarioRoutes from "./routes/progreso_usuario.route";
 
 const app: Application = express();
 
@@ -30,5 +31,6 @@ app.use("/api/usuario", usuarioRoutes);
 app.use("/api/rutina", rutinaRoutes);
 app.use("/api/rutina-dia", rutinaDiaRoutes);
 app.use("/api/rutina-dia-ejercicio", rutinaDiaEjercicioRoutes);
+app.use("/api/progreso-usuario", progresoUsuarioRoutes);
 
 export default app;
