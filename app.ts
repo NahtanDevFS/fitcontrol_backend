@@ -14,11 +14,18 @@ import dietaRoutes from "./routes/dieta.route";
 import dietaAlimentoRoutes from "./routes/dieta_alimento.route";
 import dietaAlimentoDetalleRoutes from "./routes/dieta_alimento_detalle.route";
 import cumplimientoDietaRoutes from "./routes/cumplimiento_dieta.route";
+import authRoutes from "./routes/auth.route";
 
 const app: Application = express();
 
 // Middlewares
-app.use(cors());
+// Middleware de CORS ()
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://fitcontrol.vercel.app"], // Permite solo mi frontend en local y producción
+    credentials: true, // Si usas cookies o autenticación basada en sesión
+  })
+);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -42,5 +49,6 @@ app.use("/api/dieta", dietaRoutes);
 app.use("/api/dieta-alimento", dietaAlimentoRoutes);
 app.use("/api/dieta-alimento-detalle", dietaAlimentoDetalleRoutes);
 app.use("/api/cumplimiento-dieta", cumplimientoDietaRoutes);
+app.use("/api/auth", authRoutes);
 
 export default app;

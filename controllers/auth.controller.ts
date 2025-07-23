@@ -1,0 +1,213 @@
+import { Request, Response } from "express";
+import { supabase } from "../libs/supabaseClient";
+import { User } from "@supabase/supabase-js";
+import bcrypt from "bcrypt";
+
+const SALT_ROUNDS = 12; // Coste del hashing (12 es un valor recomendado)
+
+export interface AuthenticatedRequest extends Request {
+  user?: User;
+}
+
+// Registrar nuevo usuario
+export const registrarUsuario = async (req: Request, res: Response) => {
+  try {
+    const { email, password, nombre_usuario } = req.body;
+
+    // Validación básica
+    if (!email || !password || !nombre_usuario) {
+      return res.status(400).json({
+        error: "Email, contraseña y nombre de usuario son requeridos",
+      });
+    }
+
+    // Cifrar la contraseña
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+    // 1. Registrar usuario en Auth de Supabase
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password, // Enviar la contraseña original al servicio de autenticación
+    });
+
+    if (authError) {
+      return res.status(400).json({ error: authError.message });
+    }
+
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      return res.status(500).json({ error: "Error al obtener ID de usuario" });
+    }
+
+    // 2. Crear registro en tabla usuario con contraseña cifrada
+    const { data: userData, error: userError } = await supabase
+      .from("usuario")
+      .insert([
+        {
+          id_usuario: userId,
+          nombre_usuario,
+          correo_usuario: email,
+          contrasena_usuario: hashedPassword, // Almacenar solo el hash
+          fecha_creacion: new Date().toISOString().split("T")[0],
+          estado: 1, // 1 = activo
+        },
+      ])
+      .select()
+      .single();
+
+    if (userError) {
+      // Si falla la creación en la tabla usuario, eliminar el usuario de auth
+      await supabase.auth.admin.deleteUser(userId);
+      return res.status(400).json({ error: userError.message });
+    }
+
+    res.status(201).json({
+      message: "Usuario registrado exitosamente",
+      user: {
+        id: userData.id_usuario,
+        nombre: userData.nombre_usuario,
+        email: userData.correo_usuario,
+        fecha_creacion: userData.fecha_creacion,
+      },
+      session: authData.session,
+    });
+  } catch (error) {
+    console.error("Error en registro de usuario:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+// Autenticar usuario
+export const autenticarUsuario = async (req: Request, res: Response) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        error: "Email y contraseña son requeridos",
+      });
+    }
+
+    // 1. Primero verificar con Supabase Auth
+    const { data: authData, error: authError } =
+      await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+    if (authError) {
+      return res.status(401).json({ error: authError.message });
+    }
+
+    // 2. Obtener usuario de nuestra tabla para verificar el hash (opcional)
+    const { data: userData, error: userError } = await supabase
+      .from("usuario")
+      .select("*")
+      .eq("correo_usuario", email)
+      .single();
+
+    if (userError) {
+      return res.status(404).json({ error: "Perfil de usuario no encontrado" });
+    }
+
+    // 3. Verificar contraseña con el hash almacenado (como capa adicional de seguridad)
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      userData.contrasena_usuario
+    );
+
+    if (!isPasswordValid) {
+      // Esto no debería ocurrir ya que Supabase Auth ya verificó la contraseña
+      await supabase.auth.signOut();
+      return res.status(401).json({ error: "Credenciales inválidas" });
+    }
+
+    // Si todo está bien, devolver los datos
+    res.json({
+      message: "Autenticación exitosa",
+      user: {
+        id: userData.id_usuario,
+        nombre: userData.nombre_usuario,
+        email: userData.correo_usuario,
+        fecha_creacion: userData.fecha_creacion,
+      },
+      session: authData.session,
+    });
+  } catch (error) {
+    console.error("Error en autenticación:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+// Cerrar sesión
+export const cerrarSesion = async (req: Request, res: Response) => {
+  try {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.json({ message: "Sesión cerrada exitosamente" });
+  } catch (error) {
+    console.error("Error al cerrar sesión:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+// Obtener usuario actual
+export const obtenerUsuarioActual = async (req: Request, res: Response) => {
+  try {
+    // Verificar sesión
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return res.status(401).json({ error: "No autenticado" });
+    }
+
+    // Obtener información adicional del usuario
+    const { data: userData, error: userError } = await supabase
+      .from("usuario")
+      .select("*")
+      .eq("id_usuario", user.id)
+      .single();
+
+    if (userError) {
+      return res.status(404).json({ error: "Perfil de usuario no encontrado" });
+    }
+
+    res.json(userData);
+  } catch (error) {
+    console.error("Error al obtener usuario:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+// Middleware de autenticación
+export const autenticarMiddleware = async (
+  req: AuthenticatedRequest,
+  res: Response,
+  next: Function
+) => {
+  try {
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return res.status(401).json({ error: "No autorizado" });
+    }
+
+    // Adjuntar usuario al request
+    req.user = user;
+    next();
+  } catch (error) {
+    console.error("Error en middleware de autenticación:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
