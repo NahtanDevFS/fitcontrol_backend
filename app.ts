@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express, { Express } from "express";
 import cors from "cors";
 import grupoMuscularRoutes from "./routes/grupo_muscular.route";
 import musculoRoutes from "./routes/musculo.route";
@@ -16,7 +16,7 @@ import dietaAlimentoDetalleRoutes from "./routes/dieta_alimento_detalle.route";
 import cumplimientoDietaRoutes from "./routes/cumplimiento_dieta.route";
 import authRoutes from "./routes/auth.route";
 
-const app: Application = express();
+const app: Express = express();
 
 // Middlewares
 // Middleware de CORS ()
