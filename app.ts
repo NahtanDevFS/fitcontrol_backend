@@ -13,6 +13,7 @@ import cumplimientoRutinaRoutes from "./routes/cumplimiento_rutina.route";
 import dietaRoutes from "./routes/dieta.route";
 import dietaAlimentoRoutes from "./routes/dieta_alimento.route";
 import dietaAlimentoDetalleRoutes from "./routes/dieta_alimento_detalle.route";
+import cumplimientoDietaRoutes from "./routes/cumplimiento_dieta.route";
 
 const app: Application = express();
 
@@ -40,5 +41,6 @@ app.use("/api/cumplimiento-rutina", cumplimientoRutinaRoutes);
 app.use("/api/dieta", dietaRoutes);
 app.use("/api/dieta-alimento", dietaAlimentoRoutes);
 app.use("/api/dieta-alimento-detalle", dietaAlimentoDetalleRoutes);
+app.use("/api/cumplimiento-dieta", cumplimientoDietaRoutes);
 
 export default app;
