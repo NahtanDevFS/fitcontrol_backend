@@ -83,7 +83,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
   }
 };
 
-// Autenticar usuario
+// Autenticar usuario (no es necesario verificar con bcrypt, supabase ya lo hace con authetication)
 export const autenticarUsuario = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -94,7 +94,7 @@ export const autenticarUsuario = async (req: Request, res: Response) => {
       });
     }
 
-    // 1. Primero verificar con Supabase Auth
+    // 1. Autenticar con Supabase Auth
     const { data: authData, error: authError } =
       await supabase.auth.signInWithPassword({
         email,
@@ -105,30 +105,31 @@ export const autenticarUsuario = async (req: Request, res: Response) => {
       return res.status(401).json({ error: authError.message });
     }
 
-    // 2. Obtener usuario de nuestra tabla para verificar el hash (opcional)
     const { data: userData, error: userError } = await supabase
       .from("usuario")
       .select("*")
       .eq("correo_usuario", email)
       .single();
 
-    if (userError) {
-      return res.status(404).json({ error: "Perfil de usuario no encontrado" });
-    }
-
-    // 3. Verificar contraseña con el hash almacenado (como capa adicional de seguridad)
-    const isPasswordValid = await bcrypt.compare(
-      password,
-      userData.contrasena_usuario
-    );
-
-    if (!isPasswordValid) {
-      // Esto no debería ocurrir ya que Supabase Auth ya verificó la contraseña
+    // 2. Obtener datos adicionales del usuario desde tu tabla
+    // FIX: Comprobar si el perfil de usuario existe.
+    // Si hay un error en la BD o si no se encuentra el usuario, se cierra la sesión y se devuelve un error.
+    if (userError || !userData) {
       await supabase.auth.signOut();
-      return res.status(401).json({ error: "Credenciales inválidas" });
+      return res
+        .status(404)
+        .json({
+          error: "Perfil de usuario no encontrado o datos inconsistentes.",
+        });
     }
 
-    // Si todo está bien, devolver los datos
+    if (userData.estado !== 1) {
+      await supabase.auth.signOut();
+      return res
+        .status(403)
+        .json({ error: "Usuario no activo o pendiente de verificación" });
+    }
+
     res.json({
       message: "Autenticación exitosa",
       user: {
