@@ -24,10 +24,16 @@ export const registrarUsuario = async (req: Request, res: Response) => {
     // Cifrar la contraseña
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // 1. Registrar usuario en Auth de Supabase
+    // 1. Registrar usuario en Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
-      password, // Enviar la contraseña original al servicio de autenticación
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirmacion`, // URL de confirmación
+        data: {
+          nombre_usuario,
+        },
+      },
     });
 
     if (authError) {
@@ -40,7 +46,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Error al obtener ID de usuario" });
     }
 
-    // 2. Crear registro en tabla usuario con contraseña cifrada
+    // 2. Crear registro en tabla usuario (sin contraseña)
     const { data: userData, error: userError } = await supabase
       .from("usuario")
       .insert([
@@ -48,29 +54,28 @@ export const registrarUsuario = async (req: Request, res: Response) => {
           id_usuario: userId,
           nombre_usuario,
           correo_usuario: email,
-          contrasena_usuario: hashedPassword, // Almacenar solo el hash
           fecha_creacion: new Date().toISOString().split("T")[0],
-          estado: 1, // 1 = activo
+          estado: 0, // 0 = pendiente de verificación
         },
       ])
       .select()
       .single();
 
     if (userError) {
-      // Si falla la creación en la tabla usuario, eliminar el usuario de auth
       await supabase.auth.admin.deleteUser(userId);
       return res.status(400).json({ error: userError.message });
     }
 
+    // Respuesta exitosa indicando que se requiere verificación
     res.status(201).json({
-      message: "Usuario registrado exitosamente",
+      success: true,
+      message: "Registro exitoso. Por favor verifica tu correo electrónico.",
       user: {
         id: userData.id_usuario,
-        nombre: userData.nombre_usuario,
         email: userData.correo_usuario,
-        fecha_creacion: userData.fecha_creacion,
+        nombre: userData.nombre_usuario,
+        estado: userData.estado,
       },
-      session: authData.session,
     });
   } catch (error) {
     console.error("Error en registro de usuario:", error);
