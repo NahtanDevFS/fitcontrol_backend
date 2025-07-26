@@ -23,7 +23,7 @@ const app: Express = express();
 app.use(
   cors({
     origin: ["http://localhost:3000", "https://fitcontrol-frontend.vercel.app"], // Permite solo mi frontend en local y producción
-    credentials: true, // Si usas cookies o autenticación basada en sesión
+    credentials: true, // cookies o autenticación basada en sesión
   })
 );
 app.use(express.json());
