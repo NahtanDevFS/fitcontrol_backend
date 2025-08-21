@@ -48,7 +48,7 @@ export const crearRutinaDia = async (req: Request, res: Response) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.status(201).json(data[0]);
+    res.status(201).json(data);
   } catch (error) {
     console.error("Error al crear la rutina del día:", error);
     res.status(500).json({ error: "Error interno del servidor" });
