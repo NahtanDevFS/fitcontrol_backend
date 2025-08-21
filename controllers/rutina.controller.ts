@@ -130,3 +130,24 @@ export const actualizarRutina = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
+export const eliminarRutina = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // id de la rutina
+
+    const { error } = await supabase
+      .from("rutina")
+      .delete()
+      .eq("id_rutina", id);
+
+    if (error) {
+      console.error("Error al eliminar la rutina:", error);
+      return res.status(400).json({ error: error.message });
+    }
+
+    res.status(204).send(); // 204 No Content, significa que todo salió bien
+  } catch (error) {
+    console.error("Error de servidor al eliminar rutina:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
