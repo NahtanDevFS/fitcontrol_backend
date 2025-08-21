@@ -1,3 +1,4 @@
+//cumplimiento_rutina.controller.ts
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
@@ -29,12 +30,10 @@ export const crearCumplimientoRutina = async (req: Request, res: Response) => {
 
     // Validación básica
     if (!id_rutina_dia_semana || !fecha_a_cumplir) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "Los campos id_rutina_dia_semana y fecha_a_cumplir son obligatorios",
-        });
+      return res.status(400).json({
+        error:
+          "Los campos id_rutina_dia_semana y fecha_a_cumplir son obligatorios",
+      });
     }
 
     const { data, error } = await supabase

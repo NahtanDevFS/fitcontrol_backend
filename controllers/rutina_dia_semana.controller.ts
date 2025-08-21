@@ -1,3 +1,4 @@
+//rutina_dia_semana.controller.ts
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
