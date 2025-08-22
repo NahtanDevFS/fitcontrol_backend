@@ -151,3 +151,62 @@ export const eliminarRutina = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
+export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
+  const id_rutina = req.params.id;
+  const { nombre_rutina, dias } = req.body;
+
+  try {
+    // Paso 1: Actualizar el nombre de la rutina principal
+    const { error: updateError } = await supabase
+      .from("rutina")
+      .update({ nombre_rutina })
+      .eq("id_rutina", id_rutina);
+
+    if (updateError) throw updateError;
+
+    // Paso 2: Eliminar todos los días (y sus ejercicios en cascada) asociados a la rutina
+    const { error: deleteDiasError } = await supabase
+      .from("rutina_dia_semana")
+      .delete()
+      .eq("id_rutina", id_rutina);
+
+    if (deleteDiasError) throw deleteDiasError;
+
+    // Paso 3: Volver a insertar los días y ejercicios con la nueva data
+    for (const dia of dias) {
+      const { data: nuevoDia, error: diaError } = await supabase
+        .from("rutina_dia_semana")
+        .insert({ id_rutina, dia_semana: dia.dia_semana })
+        .select("id_rutina_dia_semana")
+        .single();
+
+      if (diaError) throw diaError;
+
+      const ejerciciosParaInsertar = dia.ejercicios.map((ej: any) => ({
+        id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
+        id_ejercicio: ej.id_ejercicio,
+        series: ej.series,
+        repeticiones: ej.repeticiones,
+        peso_ejercicio: ej.peso_ejercicio,
+      }));
+
+      if (ejerciciosParaInsertar.length > 0) {
+        const { error: ejError } = await supabase
+          .from("rutina_dia_semana_ejercicio")
+          .insert(ejerciciosParaInsertar);
+
+        if (ejError) throw ejError;
+      }
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Rutina actualizada correctamente" });
+  } catch (error) {
+    console.error("Error al actualizar la rutina completa:", error);
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error });
+  }
+};
