@@ -3,8 +3,6 @@ import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 import { User } from "@supabase/supabase-js";
 
-const SALT_ROUNDS = 12; // Coste del hashing (12 es un valor recomendado)
-
 export interface AuthenticatedRequest extends Request {
   user?: User;
 }
@@ -20,10 +18,6 @@ export const registrarUsuario = async (req: Request, res: Response) => {
         error: "Email, contraseña y nombre de usuario son requeridos",
       });
     }
-
-    // Cifrar la contraseña
-    //const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
-
     // 1. Registrar usuario en Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -251,35 +245,43 @@ export const actualizarPasswordUsuario = async (
   req: AuthenticatedRequest,
   res: Response
 ) => {
-  const { password } = req.body;
-  const user = req.user; // Obtenido del middleware
+  const { password, access_token, refresh_token } = req.body;
 
-  if (!password || !user) {
+  if (!password || !access_token || !refresh_token) {
     return res
-      .status(401)
-      .json({ error: "Datos inválidos o sesión no autorizada." });
+      .status(400)
+      .json({ error: "Faltan datos para la actualización." });
   }
 
-  // Esta parte funciona, la contraseña se actualiza
-  const { error } = await supabase.auth.updateUser({
-    password: password,
-  });
+  try {
+    // --- CORRECCIÓN CLAVE ---
+    // 1. Establecemos la sesión en el cliente de Supabase del backend.
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token,
+      refresh_token,
+    });
+    if (sessionError) throw sessionError;
 
-  // Si la actualización falla por alguna razón (ej. contraseña insegura), se detiene aquí
-  if (error) {
+    // 2. Ahora que el cliente está "autenticado", actualizamos al usuario.
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: password,
+    });
+
+    if (updateError) throw updateError;
+
+    // 3. Cerramos la sesión por seguridad.
+    await supabase.auth.signOut();
+
+    return res
+      .status(200)
+      .json({ message: "Contraseña actualizada exitosamente." });
+  } catch (error: any) {
     console.error("Error al actualizar la contraseña:", error);
     return res
       .status(500)
-      .json({ error: "No se pudo actualizar la contraseña.", details: error });
+      .json({
+        error: "No se pudo actualizar la contraseña.",
+        details: error.message,
+      });
   }
-
-  // La línea que causaba el error 500 (supabase.auth.admin.signOut) ya no está aquí.
-
-  // Si todo fue bien, se envía la respuesta de éxito.
-  console.log(
-    `Contraseña actualizada para el usuario ${user.id}. Enviando respuesta 200 OK.`
-  );
-  return res
-    .status(200)
-    .json({ message: "Contraseña actualizada exitosamente." });
 };
