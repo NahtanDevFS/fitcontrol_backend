@@ -272,17 +272,15 @@ export const actualizarPasswordUsuario = async (
     console.error("Error al actualizar la contraseña:", error);
     return res
       .status(500)
-      .json({ error: "No se pudo actualizar la contraseña." });
+      .json({ error: "No se pudo actualizar la contraseña.", details: error });
   }
 
   // Después de un cambio de contraseña exitoso, es una buena práctica de seguridad
   // cerrar la sesión para forzar un nuevo login.
   await supabase.auth.signOut();
 
-  return res
-    .status(200)
-    .json({
-      message:
-        "Contraseña actualizada exitosamente. Por favor, inicia sesión de nuevo.",
-    });
+  return res.status(200).json({
+    message:
+      "Contraseña actualizada exitosamente. Por favor, inicia sesión de nuevo.",
+  });
 };
