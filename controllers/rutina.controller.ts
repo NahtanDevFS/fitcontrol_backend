@@ -152,28 +152,21 @@ export const eliminarRutina = async (req: Request, res: Response) => {
   }
 };
 
-export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
-  const id_rutina = req.params.id;
-  const { nombre_rutina, dias } = req.body;
+export const crearRutinaCompleta = async (req: Request, res: Response) => {
+  const { nombre_rutina, id_usuario, dias } = req.body;
 
   try {
-    // Paso 1: Actualizar el nombre de la rutina principal
-    const { error: updateError } = await supabase
+    // Paso 1: Crear la rutina principal para obtener su ID
+    const { data: nuevaRutina, error: rutinaError } = await supabase
       .from("rutina")
-      .update({ nombre_rutina })
-      .eq("id_rutina", id_rutina);
+      .insert({ nombre_rutina, id_usuario })
+      .select("id_rutina")
+      .single();
 
-    if (updateError) throw updateError;
+    if (rutinaError) throw rutinaError;
+    const id_rutina = nuevaRutina.id_rutina;
 
-    // Paso 2: Eliminar todos los días (y sus ejercicios en cascada) asociados a la rutina
-    const { error: deleteDiasError } = await supabase
-      .from("rutina_dia_semana")
-      .delete()
-      .eq("id_rutina", id_rutina);
-
-    if (deleteDiasError) throw deleteDiasError;
-
-    // Paso 3: Volver a insertar los días y ejercicios con la nueva data
+    // Paso 2: Insertar los días y ejercicios (misma lógica que la actualización)
     for (const dia of dias) {
       const { data: nuevoDia, error: diaError } = await supabase
         .from("rutina_dia_semana")
@@ -183,19 +176,84 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
 
       if (diaError) throw diaError;
 
-      const ejerciciosParaInsertar = dia.ejercicios.map((ej: any) => ({
-        id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
-        id_ejercicio: ej.id_ejercicio,
-        series: ej.series,
-        repeticiones: ej.repeticiones,
-        peso_ejercicio: ej.peso_ejercicio,
-      }));
-
-      if (ejerciciosParaInsertar.length > 0) {
+      if (dia.ejercicios && dia.ejercicios.length > 0) {
+        const ejerciciosParaInsertar = dia.ejercicios.map((ej: any) => ({
+          id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
+          id_ejercicio: ej.id_ejercicio,
+          series: ej.series,
+          repeticiones: ej.repeticiones,
+          peso_ejercicio: ej.peso_ejercicio,
+        }));
         const { error: ejError } = await supabase
           .from("rutina_dia_semana_ejercicio")
           .insert(ejerciciosParaInsertar);
 
+        if (ejError) throw ejError;
+      }
+    }
+
+    res
+      .status(201)
+      .json({ success: true, message: "Rutina creada correctamente" });
+  } catch (error) {
+    console.error("Error al crear la rutina completa:", error);
+    res
+      .status(500)
+      .json({
+        success: false,
+        error: "Error interno del servidor",
+        details: error,
+      });
+  }
+};
+
+// Función CORREGIDA para manejar la actualización
+export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
+  // --- CORRECCIÓN AQUÍ ---
+  // Convertimos el ID de la URL (string) a un número
+  const id_rutina = parseInt(req.params.id, 10);
+  const { nombre_rutina, dias } = req.body;
+
+  // Verificamos si la conversión fue exitosa
+  if (isNaN(id_rutina)) {
+    return res.status(400).json({ error: "El ID de la rutina no es válido" });
+  }
+
+  try {
+    // Paso 1: Actualizar el nombre de la rutina
+    const { error: updateError } = await supabase
+      .from("rutina")
+      .update({ nombre_rutina })
+      .eq("id_rutina", id_rutina);
+    if (updateError) throw updateError;
+
+    // Paso 2: Eliminar días y ejercicios antiguos
+    const { error: deleteDiasError } = await supabase
+      .from("rutina_dia_semana")
+      .delete()
+      .eq("id_rutina", id_rutina);
+    if (deleteDiasError) throw deleteDiasError;
+
+    // Paso 3: Re-insertar los datos nuevos
+    for (const dia of dias) {
+      const { data: nuevoDia, error: diaError } = await supabase
+        .from("rutina_dia_semana")
+        .insert({ id_rutina, dia_semana: dia.dia_semana }) // Ahora id_rutina es un número
+        .select("id_rutina_dia_semana")
+        .single();
+      if (diaError) throw diaError;
+
+      if (dia.ejercicios && dia.ejercicios.length > 0) {
+        const ejerciciosParaInsertar = dia.ejercicios.map((ej: any) => ({
+          id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
+          id_ejercicio: ej.id_ejercicio,
+          series: ej.series,
+          repeticiones: ej.repeticiones,
+          peso_ejercicio: ej.peso_ejercicio,
+        }));
+        const { error: ejError } = await supabase
+          .from("rutina_dia_semana_ejercicio")
+          .insert(ejerciciosParaInsertar);
         if (ejError) throw ejError;
       }
     }
@@ -207,7 +265,11 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
     console.error("Error al actualizar la rutina completa:", error);
     res
       .status(500)
-      .json({ error: "Error interno del servidor", details: error });
+      .json({
+        success: false,
+        error: "Error interno del servidor",
+        details: error,
+      });
   }
 };
 
