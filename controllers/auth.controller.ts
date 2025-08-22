@@ -199,16 +199,25 @@ export const autenticarMiddleware = async (
   next: Function
 ) => {
   try {
+    // 1. Buscamos el token en la cabecera 'Authorization'
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "No autorizado: Falta el token." });
+    }
+
+    const jwt = authHeader.split(" ")[1];
+
+    // 2. Usamos el token del frontend para verificar al usuario en el backend
     const {
       data: { user },
       error,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser(jwt);
 
     if (error || !user) {
-      return res.status(401).json({ error: "No autorizado" });
+      return res.status(401).json({ error: "No autorizado: Token inválido." });
     }
 
-    // Adjuntar usuario al request
+    // 3. Adjuntamos el usuario al objeto 'req' para usarlo en el siguiente controlador
     req.user = user;
     next();
   } catch (error) {
@@ -257,11 +266,14 @@ export const actualizarPasswordUsuario = async (
   if (!password) {
     return res.status(400).json({ error: "La nueva contraseña es requerida." });
   }
-  // if (!user) {
-  //   return res.status(401).json({ error: "No autorizado. Sesión inválida." });
-  // }
+  if (!user) {
+    return res.status(401).json({ error: "No autorizado. Sesión inválida." });
+  }
 
-  const { error } = await supabase.auth.updateUser({ password: password });
+  // Usamos el cliente de admin para actualizar la contraseña de un usuario por su ID
+  const { error } = await supabase.auth.admin.updateUserById(user.id, {
+    password: password,
+  });
 
   if (error) {
     console.error("Error al actualizar la contraseña:", error);
@@ -270,6 +282,8 @@ export const actualizarPasswordUsuario = async (
       .json({ error: "No se pudo actualizar la contraseña." });
   }
 
+  // Después de actualizar, cerramos todas las sesiones del usuario por seguridad
+  await supabase.auth.admin.signOut(user.id);
   return res
     .status(200)
     .json({ message: "Contraseña actualizada exitosamente." });
