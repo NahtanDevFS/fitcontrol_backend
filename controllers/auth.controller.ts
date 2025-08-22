@@ -2,7 +2,6 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 import { User } from "@supabase/supabase-js";
-import bcrypt from "bcrypt";
 
 const SALT_ROUNDS = 12; // Coste del hashing (12 es un valor recomendado)
 
@@ -23,7 +22,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
     }
 
     // Cifrar la contraseña
-    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    //const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
     // 1. Registrar usuario en Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -199,15 +198,11 @@ export const autenticarMiddleware = async (
   next: Function
 ) => {
   try {
-    // 1. Buscamos el token en la cabecera 'Authorization'
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({ error: "No autorizado: Falta el token." });
     }
-
     const jwt = authHeader.split(" ")[1];
-
-    // 2. Usamos el token del frontend para verificar al usuario en el backend
     const {
       data: { user },
       error,
@@ -216,8 +211,6 @@ export const autenticarMiddleware = async (
     if (error || !user) {
       return res.status(401).json({ error: "No autorizado: Token inválido." });
     }
-
-    // 3. Adjuntamos el usuario al objeto 'req' para usarlo en el siguiente controlador
     req.user = user;
     next();
   } catch (error) {
@@ -259,9 +252,7 @@ export const actualizarPasswordUsuario = async (
   res: Response
 ) => {
   const { password } = req.body;
-
-  // El usuario viene del middleware de autenticación, así que sabemos que hay una sesión válida.
-  const user = req.user;
+  const user = req.user; // Obtenido del middleware
 
   if (!password) {
     return res.status(400).json({ error: "La nueva contraseña es requerida." });
@@ -270,8 +261,10 @@ export const actualizarPasswordUsuario = async (
     return res.status(401).json({ error: "No autorizado. Sesión inválida." });
   }
 
-  // Usamos el cliente de admin para actualizar la contraseña de un usuario por su ID
-  const { error } = await supabase.auth.admin.updateUserById(user.id, {
+  // --- CORRECCIÓN CLAVE ---
+  // Usamos supabase.auth.updateUser para que el usuario autenticado
+  // actualice su PROPIA contraseña. No se necesita el cliente de admin.
+  const { error } = await supabase.auth.updateUser({
     password: password,
   });
 
@@ -282,9 +275,14 @@ export const actualizarPasswordUsuario = async (
       .json({ error: "No se pudo actualizar la contraseña." });
   }
 
-  // Después de actualizar, cerramos todas las sesiones del usuario por seguridad
-  await supabase.auth.admin.signOut(user.id);
+  // Después de un cambio de contraseña exitoso, es una buena práctica de seguridad
+  // cerrar la sesión para forzar un nuevo login.
+  await supabase.auth.signOut();
+
   return res
     .status(200)
-    .json({ message: "Contraseña actualizada exitosamente." });
+    .json({
+      message:
+        "Contraseña actualizada exitosamente. Por favor, inicia sesión de nuevo.",
+    });
 };
