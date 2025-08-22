@@ -226,7 +226,7 @@ export const solicitarReseteoPassword = async (req: Request, res: Response) => {
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     // Esta es la URL a la que llegará el usuario desde su correo
-    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`,
   });
 
   if (error) {
