@@ -257,9 +257,9 @@ export const actualizarPasswordUsuario = async (
   if (!password) {
     return res.status(400).json({ error: "La nueva contraseña es requerida." });
   }
-  if (!user) {
-    return res.status(401).json({ error: "No autorizado. Sesión inválida." });
-  }
+  // if (!user) {
+  //   return res.status(401).json({ error: "No autorizado. Sesión inválida." });
+  // }
 
   const { error } = await supabase.auth.updateUser({ password: password });
 
