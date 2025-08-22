@@ -1,3 +1,4 @@
+//auth.controller.ts
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 import { User } from "@supabase/supabase-js";
@@ -29,7 +30,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/confirmacion`, // URL de confirmación
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirmation`, // URL de confirmación
         data: {
           nombre_usuario,
         },
@@ -116,11 +117,9 @@ export const autenticarUsuario = async (req: Request, res: Response) => {
     // Si hay un error en la BD o si no se encuentra el usuario, se cierra la sesión y se devuelve un error.
     if (userError || !userData) {
       await supabase.auth.signOut();
-      return res
-        .status(404)
-        .json({
-          error: "Perfil de usuario no encontrado o datos inconsistentes.",
-        });
+      return res.status(404).json({
+        error: "Perfil de usuario no encontrado o datos inconsistentes.",
+      });
     }
 
     if (userData.estado !== 1) {
