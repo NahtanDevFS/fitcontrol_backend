@@ -277,7 +277,7 @@ export const actualizarPasswordUsuario = async (
 
   // Después de un cambio de contraseña exitoso, es una buena práctica de seguridad
   // cerrar la sesión para forzar un nuevo login.
-  await supabase.auth.signOut();
+  //await supabase.auth.signOut();
 
   return res.status(200).json({
     message:
