@@ -254,20 +254,18 @@ export const actualizarPasswordUsuario = async (
   const { password } = req.body;
   const user = req.user; // Obtenido del middleware
 
-  if (!password) {
-    return res.status(400).json({ error: "La nueva contraseña es requerida." });
-  }
-  if (!user) {
-    return res.status(401).json({ error: "No autorizado. Sesión inválida." });
+  if (!password || !user) {
+    return res
+      .status(401)
+      .json({ error: "Datos inválidos o sesión no autorizada." });
   }
 
-  // --- CORRECCIÓN CLAVE ---
-  // Usamos supabase.auth.updateUser para que el usuario autenticado
-  // actualice su PROPIA contraseña. No se necesita el cliente de admin.
+  // Esta parte funciona, la contraseña se actualiza
   const { error } = await supabase.auth.updateUser({
     password: password,
   });
 
+  // Si la actualización falla por alguna razón (ej. contraseña insegura), se detiene aquí
   if (error) {
     console.error("Error al actualizar la contraseña:", error);
     return res
@@ -275,12 +273,13 @@ export const actualizarPasswordUsuario = async (
       .json({ error: "No se pudo actualizar la contraseña.", details: error });
   }
 
-  // Después de un cambio de contraseña exitoso, es una buena práctica de seguridad
-  // cerrar la sesión para forzar un nuevo login.
-  //await supabase.auth.signOut();
+  // La línea que causaba el error 500 (supabase.auth.admin.signOut) ya no está aquí.
 
-  return res.status(200).json({
-    message:
-      "Contraseña actualizada exitosamente. Por favor, inicia sesión de nuevo.",
-  });
+  // Si todo fue bien, se envía la respuesta de éxito.
+  console.log(
+    `Contraseña actualizada para el usuario ${user.id}. Enviando respuesta 200 OK.`
+  );
+  return res
+    .status(200)
+    .json({ message: "Contraseña actualizada exitosamente." });
 };
