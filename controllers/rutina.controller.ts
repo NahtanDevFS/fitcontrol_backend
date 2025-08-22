@@ -210,3 +210,52 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
       .json({ error: "Error interno del servidor", details: error });
   }
 };
+
+export const getRutinaById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // id de la rutina
+
+    const { data, error } = await supabase
+      .from("rutina")
+      .select(
+        `
+        id_rutina,
+        nombre_rutina,
+        dias:rutina_dia_semana (
+          id_rutina_dia_semana,
+          dia_semana,
+          ejercicios:rutina_dia_semana_ejercicio (
+            series,
+            repeticiones,
+            peso_ejercicio,
+            ejercicio (
+              id_ejercicio,
+              nombre_ejercicio
+            )
+          )
+        )
+      `
+      )
+      .eq("id_rutina", id)
+      .single(); // <-- CLAVE: Asegura que devuelve un solo objeto, no un array
+
+    if (error) {
+      console.error("Error de Supabase:", error);
+      // Si no encuentra la rutina, single() devuelve un error.
+      if (error.code === "PGRST116") {
+        return res.status(404).json({ error: "Rutina no encontrada" });
+      }
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: "Rutina no encontrada" });
+    }
+
+    // El alias en la query ya formatea la data, así que la podemos enviar directamente.
+    res.json(data);
+  } catch (error) {
+    console.error("Error al obtener la rutina por ID:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};

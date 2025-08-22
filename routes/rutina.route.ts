@@ -5,6 +5,7 @@ import {
   actualizarRutina,
   eliminarRutina,
   actualizarRutinaCompleta,
+  getRutinaById,
 } from "../controllers/rutina.controller";
 
 const router = Router();
@@ -14,5 +15,6 @@ router.post("/", crearRutina);
 router.put("/:id", actualizarRutina);
 router.delete("/:id", eliminarRutina);
 router.put("/completa/:id", actualizarRutinaCompleta);
+router.get("/:id", getRutinaById);
 
 export default router;
