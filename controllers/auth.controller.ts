@@ -216,3 +216,61 @@ export const autenticarMiddleware = async (
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
+// SOLICITAR RESETEO DE CONTRASEÑA
+export const solicitarReseteoPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ error: "El correo es requerido." });
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Esta es la URL a la que llegará el usuario desde su correo
+    redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/reset-password`,
+  });
+
+  if (error) {
+    console.error("Error al enviar email de reseteo:", error);
+    // No revelamos si el email existe o no por seguridad
+    return res.status(200).json({
+      message:
+        "Si existe una cuenta con este correo, se ha enviado un enlace para resetear la contraseña.",
+    });
+  }
+
+  return res.status(200).json({
+    message:
+      "Si existe una cuenta con este correo, se ha enviado un enlace para resetear la contraseña.",
+  });
+};
+
+// ACTUALIZAR LA CONTRASEÑA DEL USUARIO
+export const actualizarPasswordUsuario = async (
+  req: AuthenticatedRequest,
+  res: Response
+) => {
+  const { password } = req.body;
+
+  // El usuario viene del middleware de autenticación, así que sabemos que hay una sesión válida.
+  const user = req.user;
+
+  if (!password) {
+    return res.status(400).json({ error: "La nueva contraseña es requerida." });
+  }
+  if (!user) {
+    return res.status(401).json({ error: "No autorizado. Sesión inválida." });
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: password });
+
+  if (error) {
+    console.error("Error al actualizar la contraseña:", error);
+    return res
+      .status(500)
+      .json({ error: "No se pudo actualizar la contraseña." });
+  }
+
+  return res
+    .status(200)
+    .json({ message: "Contraseña actualizada exitosamente." });
+};
