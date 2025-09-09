@@ -170,3 +170,42 @@ export const eliminarProgresoUsuario = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
+
+// NUEVA FUNCIÓN para obtener el progreso activo y la unidad de peso
+export const getProgresoActivoUsuario = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // id del usuario
+
+    // Hacemos ambas consultas en paralelo para mayor eficiencia
+    const [progresoData, usuarioData] = await Promise.all([
+      supabase
+        .from("progreso_usuario")
+        .select("*")
+        .eq("id_usuario", id)
+        .eq("estado", 1) // Solo el progreso activo
+        .maybeSingle(),
+      supabase
+        .from("usuario")
+        .select("unidad_peso")
+        .eq("id_usuario", id)
+        .single(),
+    ]);
+
+    // Si hay un error en cualquiera de las consultas, lo manejamos
+    if (progresoData.error) throw progresoData.error;
+    if (usuarioData.error) throw usuarioData.error;
+
+    // Combinamos los resultados en una sola respuesta
+    const respuesta = {
+      progreso: progresoData.data,
+      unidad_peso: usuarioData.data?.unidad_peso || "kg",
+    };
+
+    res.json(respuesta);
+  } catch (error: any) {
+    console.error("Error al obtener el progreso activo del usuario:", error);
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
+  }
+};

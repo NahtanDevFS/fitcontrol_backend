@@ -4,9 +4,12 @@ import {
   crearProgresoUsuario,
   actualizarProgresoUsuario,
   eliminarProgresoUsuario,
+  getProgresoActivoUsuario,
 } from "../controllers/progreso_usuario.controller";
 
 const router = Router();
+
+router.get("/activo/:id", getProgresoActivoUsuario);
 
 router.get("/:id", getProgresoUsuario);
 router.post("/", crearProgresoUsuario);
