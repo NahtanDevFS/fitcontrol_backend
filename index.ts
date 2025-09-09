@@ -16,6 +16,7 @@ import dietaAlimentoDetalleRoutes from "./routes/dieta_alimento_detalle.route";
 import cumplimientoDietaRoutes from "./routes/cumplimiento_dieta.route";
 import authRoutes from "./routes/auth.route";
 import gastoEnergeticoRoutes from "./routes/gasto_energetico.route";
+import perfilRoutes from "./routes/perfil.route";
 
 const app: Express = express();
 
@@ -52,5 +53,6 @@ app.use("/api/dieta-alimento-detalle", dietaAlimentoDetalleRoutes);
 app.use("/api/cumplimiento-dieta", cumplimientoDietaRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/gasto-energetico", gastoEnergeticoRoutes);
+app.use("/api/perfil", perfilRoutes);
 
 export default app;
