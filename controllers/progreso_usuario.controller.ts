@@ -27,46 +27,62 @@ export const crearProgresoUsuario = async (req: Request, res: Response) => {
   try {
     const {
       id_usuario,
-      fecha_inicio_proceso,
-      fecha_final_proceso,
-      peso_actual,
-      peso_deseado,
-      objetivo,
-      estado,
+      peso_actual, // El frontend ahora enviará el peso en KG
+      peso_deseado, // El frontend ahora enviará el peso en KG
     } = req.body;
 
-    // Validación
-    if (!id_usuario || !peso_actual || !peso_deseado || !objetivo) {
+    // 1. Validación robusta en el backend
+    if (!id_usuario || !peso_actual || !peso_deseado) {
       return res.status(400).json({
         error:
-          "Los campos id_usuario, peso_actual, peso_deseado y objetivo son obligatorios",
+          "Los campos id_usuario, peso_actual y peso_deseado son obligatorios",
       });
     }
+
+    const pa = parseFloat(peso_actual);
+    const pd = parseFloat(peso_deseado);
+
+    if (isNaN(pa) || isNaN(pd) || pa <= 0 || pd <= 0) {
+      return res.status(400).json({
+        error: "Los valores de peso deben ser números positivos.",
+      });
+    }
+
+    if (pa === pd) {
+      return res.status(400).json({
+        error: "El peso actual y el objetivo no pueden ser iguales.",
+      });
+    }
+
+    // 2. Lógica de negocio movida al backend
+    const objetivo = pd < pa ? "bajar" : "subir";
 
     const { data, error } = await supabase
       .from("progreso_usuario")
       .insert([
         {
           id_usuario,
-          fecha_inicio_proceso,
-          fecha_final_proceso: fecha_final_proceso || null,
-          peso_actual,
-          peso_deseado,
+          peso_actual: pa,
+          peso_deseado: pd,
           objetivo,
-          estado: estado || 1, // Valor por defecto si no se proporciona
+          estado: 1, // Por defecto, la nueva meta está activa
+          peso_inicial: pa, // El peso inicial es el peso actual al crear la meta
         },
       ])
       .select()
       .single();
 
     if (error) {
+      // Si hay un error de base de datos (ej. usuario no existe), lo capturamos
       return res.status(400).json({ error: error.message });
     }
 
     res.status(201).json(data);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error al crear registro de progreso:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
   }
 };
 
