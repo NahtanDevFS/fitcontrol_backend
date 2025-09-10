@@ -1,6 +1,16 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
+const diasSemanaMapa: { [key: number]: string } = {
+  0: "Domingo",
+  1: "Lunes",
+  2: "Martes",
+  3: "Miércoles",
+  4: "Jueves",
+  5: "Viernes",
+  6: "Sábado",
+};
+
 // Obtener dietas de un usuario filtrando por id_usuario
 export const getDietasUsuario = async (req: Request, res: Response) => {
   try {
@@ -186,5 +196,125 @@ export const eliminarDieta = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Error al eliminar la dieta:", error);
     res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+// función para obtener los datos de dieta completos del usuario
+export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // ID del usuario
+
+    // 1. Obtener la dieta principal del usuario con todas sus comidas y alimentos
+    let { data: dieta, error: dietaError } = await supabase
+      .from("dieta")
+      .select("*, dieta_alimento(*, dieta_alimento_detalle(*))")
+      .eq("id_usuario", id)
+      .maybeSingle();
+
+    if (dietaError) throw dietaError;
+
+    // Si el usuario no tiene dieta, se crea una por defecto
+    if (!dieta) {
+      const { data: nuevaDieta, error: createError } = await supabase
+        .from("dieta")
+        .insert({ id_usuario: id, nombre_dieta: "Mi Dieta Principal" })
+        .select()
+        .single();
+      if (createError) throw createError;
+      dieta = { ...nuevaDieta, dieta_alimento: [] };
+    }
+
+    // 2. Obtener todos los registros de cumplimiento para esa dieta
+    const { data: cumplimientos, error: cumplimientosError } = await supabase
+      .from("cumplimiento_dieta_dia")
+      .select("*")
+      .eq("id_usuario", id)
+      .eq("id_dieta", dieta.id_dieta);
+
+    if (cumplimientosError) throw cumplimientosError;
+
+    const cumplimientosMap = new Map(
+      cumplimientos.map((c: any) => [c.fecha_a_cumplir, c.cumplido])
+    );
+    const diasConDieta = new Set<string>();
+    dieta.dieta_alimento.forEach((comida: any) => {
+      if (comida.dieta_alimento_detalle.length > 0)
+        diasConDieta.add(comida.dia_semana);
+    });
+
+    // 3. Calcular la racha
+    let rachaDieta = 0;
+    const hoy = new Date();
+    const fechaHoyStr = hoy.toISOString().split("T")[0];
+    if (cumplimientosMap.get(fechaHoyStr) === true) rachaDieta++;
+    for (let i = 1; i < 90; i++) {
+      const diaAnterior = new Date();
+      diaAnterior.setDate(hoy.getDate() - i);
+      const nombreDia = diasSemanaMapa[diaAnterior.getDay()];
+      const fechaStr = diaAnterior.toISOString().split("T")[0];
+      if (diasConDieta.has(nombreDia)) {
+        if (cumplimientosMap.get(fechaStr) === true) rachaDieta++;
+        else break;
+      }
+    }
+
+    // 4. Generar datos del calendario para los últimos 35 días
+    const diasCalendario = [];
+    const hoySinHora = new Date(new Date().setHours(0, 0, 0, 0));
+    for (let i = 34; i >= 0; i--) {
+      const dia = new Date();
+      dia.setDate(hoy.getDate() - i);
+      dia.setHours(0, 0, 0, 0);
+      const fechaStr = dia.toISOString().split("T")[0];
+      const nombreDia = diasSemanaMapa[dia.getDay()];
+      let status = "pending";
+      if (dia > hoySinHora) {
+        status = "future";
+      } else if (diasConDieta.has(nombreDia)) {
+        const cumplido = cumplimientosMap.get(fechaStr);
+        if (cumplido === true) status = "completed";
+        else if (cumplido === false && dia < hoySinHora) status = "missed";
+      } else {
+        status = "rest";
+      }
+      diasCalendario.push({ fecha: dia.toISOString().split("T")[0], status });
+    }
+
+    // 5. Formatear la dieta en la estructura que el frontend espera
+    const diasMap: { [key: string]: any } = {};
+    [
+      "Lunes",
+      "Martes",
+      "Miércoles",
+      "Jueves",
+      "Viernes",
+      "Sábado",
+      "Domingo",
+    ].forEach((dia) => {
+      diasMap[dia] = {};
+      ["Desayuno", "Almuerzo", "Cena", "Snacks"].forEach((tiempo) => {
+        diasMap[dia][tiempo] = { alimentos: [] };
+      });
+    });
+    dieta.dieta_alimento.forEach((alimento: any) => {
+      diasMap[alimento.dia_semana][alimento.tiempo_comida] = {
+        ...alimento,
+        alimentos: alimento.dieta_alimento_detalle,
+      };
+    });
+
+    // 6. Ensamblar y enviar la respuesta completa
+    const responsePayload = {
+      dieta: { ...dieta, dias: diasMap },
+      racha: rachaDieta,
+      calendario: diasCalendario,
+    };
+
+    res.status(200).json(responsePayload);
+  } catch (error: any) {
+    console.error("Error al obtener datos completos de la dieta:", error);
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
   }
 };
