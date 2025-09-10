@@ -218,11 +218,17 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
       const { data: nuevaDieta, error: createError } = await supabase
         .from("dieta")
         .insert({ id_usuario: id, nombre_dieta: "Mi Dieta Principal" })
-        .select()
+        .select("*, dieta_alimento(*, dieta_alimento_detalle(*))") // Seleccionamos de nuevo la estructura completa
         .single();
       if (createError) throw createError;
-      dieta = { ...nuevaDieta, dieta_alimento: [] };
+      dieta = nuevaDieta;
     }
+
+    // --- CORRECCIÓN CLAVE: Asegurarse de que las relaciones son arrays ---
+    dieta.dieta_alimento = dieta.dieta_alimento || [];
+    dieta.dieta_alimento.forEach((comida: any) => {
+      comida.dieta_alimento_detalle = comida.dieta_alimento_detalle || [];
+    });
 
     // 2. Obtener todos los registros de cumplimiento para esa dieta
     const { data: cumplimientos, error: cumplimientosError } = await supabase
