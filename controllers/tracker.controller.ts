@@ -29,8 +29,11 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
       .single();
     if (!dieta) return res.json({ diaCumplido: false, comidasDeHoy: [] });
 
+    // --- CORRECCIÓN CLAVE ---
+    const diasDeDieta = dieta.dias || [];
+
     // 2. Filtrar comidas programadas para hoy
-    const comidasProgramadas = dieta.dias.filter(
+    const comidasProgramadas = diasDeDieta.filter(
       (d: any) => d.dia_semana === nombreDiaHoy && d.id_dieta_alimento
     );
     if (comidasProgramadas.length === 0)

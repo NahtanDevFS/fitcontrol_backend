@@ -225,6 +225,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
     }
 
     // --- CORRECCIÓN CLAVE: Asegurarse de que las relaciones son arrays ---
+    // Asegúrate de que las relaciones anidadas sean arrays antes de usarlas.
     dieta.dieta_alimento = dieta.dieta_alimento || [];
     dieta.dieta_alimento.forEach((comida: any) => {
       comida.dieta_alimento_detalle = comida.dieta_alimento_detalle || [];

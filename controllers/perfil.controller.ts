@@ -53,7 +53,8 @@ export const getProfileData = async (req: Request, res: Response) => {
 
     // --- 2. Calcular Racha de Rutina ---
     let rachaRutina = 0;
-    if (rutinaActivaData.data && rutinaActivaData.data.dias) {
+    const diasDeRutina = rutinaActivaData.data?.dias || [];
+    if (rutinaActivaData.data && diasDeRutina.length > 0) {
       const diasConRutina = new Set(
         rutinaActivaData.data.dias.map((d: any) => d.dia_semana)
       );
@@ -97,7 +98,8 @@ export const getProfileData = async (req: Request, res: Response) => {
 
     // --- 3. Calcular Racha de Dieta ---
     let rachaDieta = 0;
-    if (dietaActivaData.data && dietaActivaData.data.dias) {
+    const diasDeDieta = dietaActivaData.data?.dias || []; // <-- CORRECCIÓN
+    if (dietaActivaData.data && diasDeDieta.length > 0) {
       const diasConDieta = new Set<string>();
       dietaActivaData.data.dias.forEach((comida: any) => {
         if (comida.alimentos.length > 0) diasConDieta.add(comida.dia_semana);
