@@ -241,7 +241,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
     if (cumplimientosError) throw cumplimientosError;
 
     const cumplimientosMap = new Map(
-      cumplimientos.map((c: any) => [c.fecha_a_cumplir, c.cumplido])
+      (cumplimientos || []).map((c: any) => [c.fecha_a_cumplir, c.cumplido])
     );
     const diasConDieta = new Set<string>();
     dieta.dieta_alimento.forEach((comida: any) => {
