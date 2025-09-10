@@ -65,51 +65,30 @@ export const actualizarCumplimientoRutina = async (
   res: Response
 ) => {
   try {
-    const id_cumplimiento_rutina = req.params.id;
-    const { id_rutina_dia_semana, fecha_a_cumplir, cumplido } = req.body;
+    const { id } = req.params; // id_cumplimiento_rutina
+    const { cumplido } = req.body;
 
-    // Validar que el registro existe
-    const { data: cumplimientoExistente, error: errorExistente } =
-      await supabase
-        .from("cumplimiento_rutina")
-        .select("id_cumplimiento_rutina")
-        .eq("id_cumplimiento_rutina", id_cumplimiento_rutina)
-        .single();
-
-    if (errorExistente || !cumplimientoExistente) {
-      return res
-        .status(404)
-        .json({ error: "Registro de cumplimiento no encontrado" });
-    }
-
-    // Campos a actualizar
-    const updates: Record<string, any> = {};
-    if (id_rutina_dia_semana)
-      updates.id_rutina_dia_semana = id_rutina_dia_semana;
-    if (fecha_a_cumplir) updates.fecha_a_cumplir = fecha_a_cumplir;
-    if (cumplido !== undefined) updates.cumplido = cumplido;
-
-    // Si no hay campos válidos para actualizar
-    if (Object.keys(updates).length === 0) {
+    if (cumplido === undefined) {
       return res
         .status(400)
-        .json({ error: "No se proporcionaron campos válidos para actualizar" });
+        .json({ error: "El campo 'cumplido' es requerido." });
     }
 
     const { data, error } = await supabase
       .from("cumplimiento_rutina")
-      .update(updates)
-      .eq("id_cumplimiento_rutina", id_cumplimiento_rutina)
-      .select();
+      .update({ cumplido })
+      .eq("id_cumplimiento_rutina", id)
+      .select()
+      .single();
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (error) throw error;
 
-    res.json(data[0]);
-  } catch (error) {
+    res.status(200).json(data);
+  } catch (error: any) {
     console.error("Error al actualizar cumplimiento de rutina:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
   }
 };
 

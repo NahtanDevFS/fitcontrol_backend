@@ -119,3 +119,71 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
       .json({ error: "Error interno del servidor", details: error.message });
   }
 };
+
+export const getRoutineTrackerForToday = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.params; // ID del usuario
+    const hoy = new Date();
+    const fechaHoyStr = hoy.toISOString().split("T")[0];
+    const nombreDiaHoy = diasSemanaMapa[hoy.getDay()];
+
+    // 1. Obtener la rutina activa del usuario
+    const { data: rutinaActiva } = await supabase
+      .from("rutina")
+      .select(
+        "*, dias:rutina_dia_semana(*, ejercicios:rutina_dia_semana_ejercicio(*, ejercicio(*)))"
+      )
+      .eq("id_usuario", id)
+      .eq("estado", 1)
+      .limit(1)
+      .single();
+
+    if (!rutinaActiva || !rutinaActiva.dias) {
+      return res.json({ diaDeHoy: null, diaCumplido: false });
+    }
+
+    // 2. Encontrar el día de rutina que corresponde a hoy
+    const rutinaDiaDeHoy = rutinaActiva.dias.find(
+      (d: any) => d.dia_semana === nombreDiaHoy
+    );
+
+    if (!rutinaDiaDeHoy) {
+      return res.json({ diaDeHoy: null, diaCumplido: false });
+    }
+
+    // 3. Verificar si ya existe un registro de cumplimiento para hoy, si no, crearlo.
+    let { data: cumplimiento } = await supabase
+      .from("cumplimiento_rutina")
+      .select("id_cumplimiento_rutina, cumplido")
+      .eq("id_rutina_dia_semana", rutinaDiaDeHoy.id_rutina_dia_semana)
+      .eq("fecha_a_cumplir", fechaHoyStr)
+      .maybeSingle();
+
+    if (!cumplimiento) {
+      const { data: nuevoCumplimiento } = await supabase
+        .from("cumplimiento_rutina")
+        .insert({
+          id_rutina_dia_semana: rutinaDiaDeHoy.id_rutina_dia_semana,
+          fecha_a_cumplir: fechaHoyStr,
+          cumplido: false,
+        })
+        .select("id_cumplimiento_rutina, cumplido")
+        .single();
+      cumplimiento = nuevoCumplimiento;
+    }
+
+    res.json({
+      diaDeHoy: rutinaDiaDeHoy,
+      diaCumplido: cumplimiento?.cumplido || false,
+      id_cumplimiento_rutina: cumplimiento?.id_cumplimiento_rutina,
+    });
+  } catch (error: any) {
+    console.error("Error al obtener tracker de rutina:", error);
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
+  }
+};

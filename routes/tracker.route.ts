@@ -1,10 +1,14 @@
 // fitcontrol_backend/routes/tracker.route.ts
 
 import { Router } from "express";
-import { getDietTrackerForToday } from "../controllers/tracker.controller";
+import {
+  getDietTrackerForToday,
+  getRoutineTrackerForToday,
+} from "../controllers/tracker.controller";
 
 const router = Router();
 
 router.get("/dieta/hoy/:id", getDietTrackerForToday);
+router.get("/rutina/hoy/:id", getRoutineTrackerForToday);
 
 export default router;
