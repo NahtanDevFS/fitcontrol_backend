@@ -2,6 +2,112 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
+const diasSemanaMapa: { [key: number]: string } = {
+  0: "Domingo",
+  1: "Lunes",
+  2: "Martes",
+  3: "Miércoles",
+  4: "Jueves",
+  5: "Viernes",
+  6: "Sábado",
+};
+
+export const getRutinasCompletasUsuario = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.params; // ID del usuario
+
+    // 1. Obtener todas las rutinas y la rutina activa en paralelo
+    const [rutinasRes, rutinaActivaRes] = await Promise.all([
+      supabase
+        .from("rutina")
+        .select(
+          "*, dias:rutina_dia_semana(*, ejercicios:rutina_dia_semana_ejercicio(*, ejercicio(*)))"
+        )
+        .eq("id_usuario", id),
+      supabase
+        .from("rutina")
+        .select("*, dias:rutina_dia_semana(*)")
+        .eq("id_usuario", id)
+        .eq("estado", 1)
+        .limit(1)
+        .single(),
+    ]);
+
+    if (rutinasRes.error) throw rutinasRes.error;
+
+    const rutinas = rutinasRes.data || [];
+    const rutinaActiva = rutinaActivaRes.data;
+
+    // 2. Calcular Racha y Calendario (solo si hay una rutina activa)
+    let rachaRutina = 0;
+    let calendario = [];
+    if (rutinaActiva && rutinaActiva.dias && rutinaActiva.dias.length > 0) {
+      const diasConRutina = new Set(
+        rutinaActiva.dias.map((d: any) => d.dia_semana)
+      );
+      const idsDiasConRutina = rutinaActiva.dias.map(
+        (d: any) => d.id_rutina_dia_semana
+      );
+
+      const { data: cumplimientos } = await supabase
+        .from("cumplimiento_rutina")
+        .select("*")
+        .in("id_rutina_dia_semana", idsDiasConRutina);
+      const cumplimientosMap = new Map(
+        (cumplimientos || []).map((c: any) => [c.fecha_a_cumplir, c.cumplido])
+      );
+
+      const hoy = new Date();
+      if (cumplimientosMap.get(hoy.toISOString().split("T")[0])) rachaRutina++;
+      for (let i = 1; i < 90; i++) {
+        const diaAnterior = new Date();
+        diaAnterior.setDate(hoy.getDate() - i);
+        const nombreDia = diasSemanaMapa[diaAnterior.getDay()];
+        const fechaStr = diaAnterior.toISOString().split("T")[0];
+        if (diasConRutina.has(nombreDia)) {
+          if (cumplimientosMap.get(fechaStr)) rachaRutina++;
+          else break;
+        }
+      }
+
+      const hoySinHora = new Date(new Date().setHours(0, 0, 0, 0));
+      for (let i = 34; i >= 0; i--) {
+        const dia = new Date();
+        dia.setDate(hoy.getDate() - i);
+        dia.setHours(0, 0, 0, 0);
+        const fechaStr = dia.toISOString().split("T")[0];
+        const nombreDia = diasSemanaMapa[dia.getDay()];
+        let status = "pending";
+
+        if (dia > hoySinHora) status = "future";
+        else if (diasConRutina.has(nombreDia)) {
+          const cumplido = cumplimientosMap.get(fechaStr);
+          if (cumplido === true) status = "completed";
+          else if (cumplido === false && dia < hoySinHora) status = "missed";
+        } else {
+          status = "rest";
+        }
+        calendario.push({ fecha: fechaStr, status });
+      }
+    }
+
+    res.json({
+      rutinas,
+      rutinaActiva,
+      racha: rachaRutina,
+      calendario,
+    });
+  } catch (error: any) {
+    console.error("Error al obtener datos de rutina:", error);
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
+  }
+};
+
 export const getRutinaUsuario = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // id del usuario
@@ -259,13 +365,11 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
       .json({ success: true, message: "Rutina actualizada correctamente" });
   } catch (error) {
     console.error("Error al actualizar la rutina completa:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: "Error interno del servidor",
-        details: error,
-      });
+    res.status(500).json({
+      success: false,
+      error: "Error interno del servidor",
+      details: error,
+    });
   }
 };
 

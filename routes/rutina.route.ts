@@ -7,12 +7,14 @@ import {
   eliminarRutina,
   actualizarRutinaCompleta,
   getRutinaById,
-  crearRutinaCompleta, // <-- Importar la nueva función
+  crearRutinaCompleta,
+  getRutinasCompletasUsuario,
 } from "../controllers/rutina.controller";
 
 const router = Router();
 
 // --- Rutas Específicas (deben ir primero) ---
+router.get("/completa/:id", getRutinasCompletasUsuario);
 router.get("/usuario/:id", getRutinaUsuario);
 router.post("/completa", crearRutinaCompleta); // <-- NUEVA RUTA para crear
 router.put("/completa/:id", actualizarRutinaCompleta);
