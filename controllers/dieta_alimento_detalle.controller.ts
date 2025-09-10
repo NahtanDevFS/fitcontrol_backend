@@ -53,9 +53,10 @@ export const getDetalleAlimentoById = async (req: Request, res: Response) => {
 export const crearDetalleAlimento = async (req: Request, res: Response) => {
   try {
     const {
-      id_dieta_alimento,
+      id_dieta,
+      dia_semana,
+      tiempo_comida,
       nombre_alimento,
-      tipo_alimento,
       calorias_alimento,
       proteina_alimento,
       grasas_alimento,
@@ -63,60 +64,60 @@ export const crearDetalleAlimento = async (req: Request, res: Response) => {
       gramos_alimento,
     } = req.body;
 
-    // Validación básica
-    if (
-      !id_dieta_alimento ||
-      !nombre_alimento ||
-      !tipo_alimento ||
-      calorias_alimento === undefined ||
-      proteina_alimento === undefined ||
-      grasas_alimento === undefined ||
-      carbohidratos_alimento === undefined ||
-      gramos_alimento === undefined
-    ) {
-      return res.status(400).json({
-        error: "Todos los campos son obligatorios",
-      });
+    // Validación de datos esenciales
+    if (!id_dieta || !dia_semana || !tiempo_comida || !nombre_alimento) {
+      return res
+        .status(400)
+        .json({ error: "Faltan datos requeridos para añadir el alimento." });
     }
 
-    // Validar valores numéricos
-    if (
-      isNaN(calorias_alimento) ||
-      isNaN(proteina_alimento) ||
-      isNaN(grasas_alimento) ||
-      isNaN(carbohidratos_alimento) ||
-      isNaN(gramos_alimento)
-    ) {
-      return res.status(400).json({
-        error: "Los campos nutricionales deben ser valores numéricos",
-      });
+    // 1. Busca si ya existe un registro para esa comida en ese día
+    let { data: meal } = await supabase
+      .from("dieta_alimento")
+      .select("id_dieta_alimento")
+      .eq("id_dieta", id_dieta)
+      .eq("dia_semana", dia_semana)
+      .eq("tiempo_comida", tiempo_comida)
+      .maybeSingle();
+
+    let mealId;
+    // 2. Si no existe, lo crea
+    if (!meal) {
+      const { data: newMeal, error: newMealError } = await supabase
+        .from("dieta_alimento")
+        .insert({ id_dieta, dia_semana, tiempo_comida })
+        .select("id_dieta_alimento")
+        .single();
+
+      if (newMealError) throw newMealError;
+      mealId = newMeal.id_dieta_alimento;
+    } else {
+      mealId = meal.id_dieta_alimento;
     }
 
-    const { data, error } = await supabase
+    // 3. Inserta el detalle del alimento con el ID de la comida correcto
+    const { data: newDetail, error: detailError } = await supabase
       .from("dieta_alimento_detalle")
-      .insert([
-        {
-          id_dieta_alimento,
-          nombre_alimento,
-          tipo_alimento,
-          calorias_alimento: parseFloat(calorias_alimento),
-          proteina_alimento: parseFloat(proteina_alimento),
-          grasas_alimento: parseFloat(grasas_alimento),
-          carbohidratos_alimento: parseFloat(carbohidratos_alimento),
-          gramos_alimento: parseFloat(gramos_alimento),
-        },
-      ])
+      .insert({
+        id_dieta_alimento: mealId,
+        nombre_alimento,
+        calorias_alimento,
+        proteina_alimento,
+        grasas_alimento,
+        carbohidratos_alimento,
+        gramos_alimento,
+      })
       .select()
       .single();
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+    if (detailError) throw detailError;
 
-    res.status(201).json(data);
-  } catch (error) {
+    res.status(201).json(newDetail);
+  } catch (error: any) {
     console.error("Error al crear detalle de alimento:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
+    res
+      .status(500)
+      .json({ error: "Error interno del servidor", details: error.message });
   }
 };
 
