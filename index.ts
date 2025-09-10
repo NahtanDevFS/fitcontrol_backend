@@ -18,6 +18,8 @@ import authRoutes from "./routes/auth.route";
 import gastoEnergeticoRoutes from "./routes/gasto_energetico.route";
 import perfilRoutes from "./routes/perfil.route";
 import dashboardRoutes from "./routes/dashboard.route";
+import cumplimientoDietaDiaRoutes from "./routes/cumplimiento_dieta_dia.route";
+import trackerRoutes from "./routes/tracker.route";
 
 const app: Express = express();
 
@@ -56,5 +58,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/gasto-energetico", gastoEnergeticoRoutes);
 app.use("/api/perfil", perfilRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/cumplimiento-dieta-dia", cumplimientoDietaDiaRoutes);
+app.use("/api/tracker", trackerRoutes);
 
 export default app;
