@@ -13,12 +13,23 @@ const diasSemanaMapa: { [key: number]: string } = {
   6: "Sábado",
 };
 
+// --- FUNCIÓN AUXILIAR PARA OBTENER LA FECHA UTC ---
+// Esta función crea una fecha y obtiene sus componentes en UTC,
+// evitando que la zona horaria del servidor la altere.
+const getFechaUTC = () => {
+  const ahora = new Date();
+  const anio = ahora.getUTCFullYear();
+  const mes = String(ahora.getUTCMonth() + 1).padStart(2, "0");
+  const dia = String(ahora.getUTCDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
+};
+
 export const getDietTrackerForToday = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // ID del usuario
-    const hoy = new Date();
-    const fechaHoyStr = hoy.toISOString().split("T")[0];
-    const nombreDiaHoy = diasSemanaMapa[hoy.getDay()];
+    //const hoy = new Date();
+    const fechaHoyStr = getFechaUTC();
+    const nombreDiaHoy = diasSemanaMapa[new Date().getUTCDay()];
 
     // 1. Obtener dieta activa
     const { data: dieta } = await supabase
@@ -126,9 +137,9 @@ export const getRoutineTrackerForToday = async (
 ) => {
   try {
     const { id } = req.params; // ID del usuario
-    const hoy = new Date();
-    const fechaHoyStr = hoy.toISOString().split("T")[0];
-    const nombreDiaHoy = diasSemanaMapa[hoy.getDay()];
+    //const hoy = new Date();
+    const fechaHoyStr = getFechaUTC();
+    const nombreDiaHoy = diasSemanaMapa[new Date().getUTCDay()];
 
     // 1. Obtener la rutina activa del usuario
     const { data: rutinaActiva } = await supabase
