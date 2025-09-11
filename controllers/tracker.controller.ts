@@ -13,23 +13,33 @@ const diasSemanaMapa: { [key: number]: string } = {
   6: "Sábado",
 };
 
-// --- FUNCIÓN AUXILIAR PARA OBTENER LA FECHA UTC ---
-// Esta función crea una fecha y obtiene sus componentes en UTC,
-// evitando que la zona horaria del servidor la altere.
-const getFechaUTC = () => {
-  const ahora = new Date();
-  const anio = ahora.getUTCFullYear();
-  const mes = String(ahora.getUTCMonth() + 1).padStart(2, "0");
-  const dia = String(ahora.getUTCDate()).padStart(2, "0");
-  return `${anio}-${mes}-${dia}`;
+// --- FUNCIÓN AUXILIAR MODIFICADA ---
+// Ahora calcula la fecha y el día basados en un offset de UTC.
+// Para Guatemala (CST), el offset es -6 horas.
+const getFechaLocal = (offsetHoras = -6) => {
+  const ahoraUTC = new Date();
+  // Creamos una nueva fecha ajustando la hora UTC con el offset
+  const ahoraLocal = new Date(
+    ahoraUTC.getTime() + offsetHoras * 60 * 60 * 1000
+  );
+
+  const anio = ahoraLocal.getUTCFullYear();
+  const mes = String(ahoraLocal.getUTCMonth() + 1).padStart(2, "0");
+  const dia = String(ahoraLocal.getUTCDate()).padStart(2, "0");
+
+  const nombreDia = diasSemanaMapa[ahoraLocal.getUTCDay()];
+
+  return {
+    fechaStr: `${anio}-${mes}-${dia}`,
+    nombreDia: nombreDia,
+  };
 };
 
 export const getDietTrackerForToday = async (req: Request, res: Response) => {
   try {
     const { id } = req.params; // ID del usuario
     //const hoy = new Date();
-    const fechaHoyStr = getFechaUTC();
-    const nombreDiaHoy = diasSemanaMapa[new Date().getUTCDay()];
+    const { fechaStr: fechaHoyStr, nombreDia: nombreDiaHoy } = getFechaLocal();
 
     // 1. Obtener dieta activa
     const { data: dieta } = await supabase
@@ -138,8 +148,7 @@ export const getRoutineTrackerForToday = async (
   try {
     const { id } = req.params; // ID del usuario
     //const hoy = new Date();
-    const fechaHoyStr = getFechaUTC();
-    const nombreDiaHoy = diasSemanaMapa[new Date().getUTCDay()];
+    const { fechaStr: fechaHoyStr, nombreDia: nombreDiaHoy } = getFechaLocal();
 
     // 1. Obtener la rutina activa del usuario
     const { data: rutinaActiva } = await supabase
