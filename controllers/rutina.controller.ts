@@ -312,51 +312,94 @@ export const crearRutinaCompleta = async (req: Request, res: Response) => {
   }
 };
 
-// Función CORREGIDA para manejar la actualización
 export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
   const id_rutina = parseInt(req.params.id, 10);
-  const { nombre_rutina, dias } = req.body;
+  const { nombre_rutina, dias: diasNuevos } = req.body;
 
   if (isNaN(id_rutina)) {
     return res.status(400).json({ error: "El ID de la rutina no es válido" });
   }
 
   try {
+    // 1. Actualizar el nombre de la rutina
     const { error: updateError } = await supabase
       .from("rutina")
       .update({ nombre_rutina })
       .eq("id_rutina", id_rutina);
     if (updateError) throw updateError;
 
-    const { error: deleteDiasError } = await supabase
+    // 2. Obtener los días existentes en la base de datos para esta rutina
+    const { data: diasViejos, error: fetchError } = await supabase
       .from("rutina_dia_semana")
-      .delete()
+      .select("id_rutina_dia_semana, dia_semana")
       .eq("id_rutina", id_rutina);
-    if (deleteDiasError) throw deleteDiasError;
+    if (fetchError) throw fetchError;
 
-    for (const dia of dias) {
-      const { data: nuevoDia, error: diaError } = await supabase
+    const diasViejosMap = new Map(
+      diasViejos.map((d) => [d.dia_semana, d.id_rutina_dia_semana])
+    );
+    const diasNuevosSet = new Set(diasNuevos.map((d: any) => d.dia_semana));
+
+    // 3. Identificar y eliminar los días que ya no existen
+    const idsDiasAEliminar = diasViejos
+      .filter((d) => !diasNuevosSet.has(d.dia_semana))
+      .map((d) => d.id_rutina_dia_semana);
+
+    if (idsDiasAEliminar.length > 0) {
+      const { error: deleteError } = await supabase
         .from("rutina_dia_semana")
-        .insert({ id_rutina, dia_semana: dia.dia_semana })
-        .select("id_rutina_dia_semana")
-        .single();
-      if (diaError) throw diaError;
+        .delete()
+        .in("id_rutina_dia_semana", idsDiasAEliminar);
+      if (deleteError) throw deleteError;
+    }
 
-      if (dia.ejercicios && dia.ejercicios.length > 0) {
-        // --- CORRECCIÓN CLAVE AQUÍ ---
-        // Hacemos lo mismo para la actualización.
-        const ejerciciosParaInsertar = dia.ejercicios.map((ej: any) => ({
-          id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
-          id_ejercicio: ej.id_ejercicio,
-          series: ej.series,
-          repeticiones: ej.repeticiones,
-          peso_ejercicio: ej.peso_ejercicio,
-        }));
+    // 4. Iterar sobre los días nuevos para agregar o actualizar
+    for (const diaNuevo of diasNuevos) {
+      const idDiaExistente = diasViejosMap.get(diaNuevo.dia_semana);
 
-        const { error: ejError } = await supabase
+      if (idDiaExistente) {
+        // Si el día ya existe, solo actualizamos sus ejercicios
+        const { error: deleteEjerciciosError } = await supabase
           .from("rutina_dia_semana_ejercicio")
-          .insert(ejerciciosParaInsertar);
-        if (ejError) throw ejError;
+          .delete()
+          .eq("id_rutina_dia_semana", idDiaExistente);
+        if (deleteEjerciciosError) throw deleteEjerciciosError;
+
+        if (diaNuevo.ejercicios && diaNuevo.ejercicios.length > 0) {
+          const ejerciciosParaInsertar = diaNuevo.ejercicios.map((ej: any) => ({
+            id_rutina_dia_semana: idDiaExistente,
+            id_ejercicio: ej.id_ejercicio,
+            series: ej.series,
+            repeticiones: ej.repeticiones,
+            peso_ejercicio: ej.peso_ejercicio,
+          }));
+          const { error: insertEjerciciosError } = await supabase
+            .from("rutina_dia_semana_ejercicio")
+            .insert(ejerciciosParaInsertar);
+          if (insertEjerciciosError) throw insertEjerciciosError;
+        }
+      } else {
+        // Si es un día nuevo, lo creamos junto con sus ejercicios
+        const { data: nuevoDia, error: diaError } = await supabase
+          .from("rutina_dia_semana")
+          .insert({ id_rutina, dia_semana: diaNuevo.dia_semana })
+          .select("id_rutina_dia_semana")
+          .single();
+        if (diaError) throw diaError;
+
+        if (diaNuevo.ejercicios && diaNuevo.ejercicios.length > 0) {
+          const ejerciciosParaInsertar = diaNuevo.ejercicios.map((ej: any) => ({
+            id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
+            id_ejercicio: ej.id_ejercicio,
+            series: ej.series,
+            repeticiones: ej.repeticiones,
+            peso_ejercicio: ej.peso_ejercicio,
+          }));
+          const { error: ejError } = await supabase
+            .from("rutina_dia_semana_ejercicio")
+            .insert(ejerciciosParaInsertar);
+          if (ejError) throw ejError;
+        }
       }
     }
 
