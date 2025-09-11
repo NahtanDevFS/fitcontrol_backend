@@ -64,7 +64,7 @@ export const upsertGastoEnergetico = async (req: Request, res: Response) => {
         peso_ideal_kg = 45.5 + 2.3 * ((altura_cm - 152.4) / 2.54);
       }
     }
-    peso_ideal_kg = Math.round(peso_ideal_kg);
+    //peso_ideal_kg = Math.round(peso_ideal_kg);
 
     const dataToUpsert = {
       id_usuario,
