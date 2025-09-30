@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Obtener alimentos de una dieta filtrando por id_dieta
+//Obtener alimentos de una dieta filtrando por id_dieta
 export const getAlimentoDieta = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -23,7 +23,7 @@ export const getAlimentoDieta = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener un alimento de dieta específico por su ID
+//Obtener un alimento de dieta específico por su ID
 export const getDietaAlimentoById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -50,12 +50,12 @@ export const getDietaAlimentoById = async (req: Request, res: Response) => {
   }
 };
 
-// Crear un nuevo registro de alimento en dieta
+//Crear un nuevo registro de alimento en dieta
 export const crearDietaAlimento = async (req: Request, res: Response) => {
   try {
     const { id_dieta, tiempo_comida, dia_semana, hora } = req.body;
 
-    // Validación básica
+    //Validación básica
     if (!id_dieta || !tiempo_comida || !dia_semana || !hora) {
       return res.status(400).json({
         error:
@@ -63,7 +63,7 @@ export const crearDietaAlimento = async (req: Request, res: Response) => {
       });
     }
 
-    // Validar formato de hora
+    //Validar formato de hora
     if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(hora)) {
       return res
         .status(400)
@@ -94,13 +94,13 @@ export const crearDietaAlimento = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar un registro de alimento en dieta
+//Actualizar un registro de alimento en dieta
 export const actualizarDietaAlimento = async (req: Request, res: Response) => {
   try {
     const id_dieta_alimento = req.params.id;
     const { tiempo_comida, dia_semana, hora } = req.body;
 
-    // Validar que el registro existe
+    //Validar que el registro existe
     const { data: dietaAlimentoExistente, error: errorExistente } =
       await supabase
         .from("dieta_alimento")
@@ -114,7 +114,7 @@ export const actualizarDietaAlimento = async (req: Request, res: Response) => {
         .json({ error: "Registro de dieta-alimento no encontrado" });
     }
 
-    // Campos a actualizar
+    //Campos a actualizar
     const updates: Record<string, any> = {};
     if (tiempo_comida) updates.tiempo_comida = tiempo_comida;
     if (dia_semana) updates.dia_semana = dia_semana;
@@ -127,7 +127,7 @@ export const actualizarDietaAlimento = async (req: Request, res: Response) => {
       updates.hora = hora;
     }
 
-    // Si no hay campos válidos para actualizar
+    //Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
@@ -151,12 +151,12 @@ export const actualizarDietaAlimento = async (req: Request, res: Response) => {
   }
 };
 
-// Eliminar un alimento de dieta
+//Eliminar un alimento de dieta
 export const eliminarDietaAlimento = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("dieta_alimento")
       .select("id_dieta_alimento")
@@ -169,7 +169,7 @@ export const eliminarDietaAlimento = async (req: Request, res: Response) => {
         .json({ error: "Registro de dieta-alimento no encontrado" });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase
       .from("dieta_alimento")
       .delete()
@@ -182,14 +182,14 @@ export const eliminarDietaAlimento = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(204).send(); // 204 No Content
+    res.status(204).send(); //204 No Content
   } catch (error) {
     console.error("Error al eliminar el alimento de la dieta:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
-// Obtener alimentos de dieta por día y tiempo de comida
+//Obtener alimentos de dieta por día y tiempo de comida
 export const getAlimentosDietaPorDiaYTiempo = async (
   req: Request,
   res: Response

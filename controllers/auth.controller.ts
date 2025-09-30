@@ -7,23 +7,23 @@ export interface AuthenticatedRequest extends Request {
   user?: User;
 }
 
-// Registrar nuevo usuario
+//Registrar nuevo usuario
 export const registrarUsuario = async (req: Request, res: Response) => {
   try {
     const { email, password, nombre_usuario } = req.body;
 
-    // Validación básica
+    //Validación básica
     if (!email || !password || !nombre_usuario) {
       return res.status(400).json({
         error: "Email, contraseña y nombre de usuario son requeridos",
       });
     }
-    // 1. Registrar usuario en Supabase Auth
+    //Registrar usuario en Supabase Auth
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirmation`, // URL de confirmación
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/confirmation`, //URL de confirmacion
         data: {
           nombre_usuario,
         },
@@ -40,7 +40,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
       return res.status(500).json({ error: "Error al obtener ID de usuario" });
     }
 
-    // 2. Crear registro en tabla usuario (sin contraseña)
+    //Crear registro en tabla usuario (sin contraseña)
     const { data: userData, error: userError } = await supabase
       .from("usuario")
       .insert([
@@ -60,7 +60,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
       return res.status(400).json({ error: userError.message });
     }
 
-    // Respuesta exitosa indicando que se requiere verificación
+    //Respuesta exitosa indicando que se requiere verificación
     res.status(201).json({
       success: true,
       message: "Registro exitoso. Por favor verifica tu correo electrónico.",
@@ -77,7 +77,7 @@ export const registrarUsuario = async (req: Request, res: Response) => {
   }
 };
 
-// Autenticar usuario (no es necesario verificar con bcrypt, supabase ya lo hace con authetication)
+//Autenticar usuario (no es necesario verificar con bcrypt, supabase ya lo hace con authetication)
 export const autenticarUsuario = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -88,7 +88,7 @@ export const autenticarUsuario = async (req: Request, res: Response) => {
       });
     }
 
-    // 1. Autenticar con Supabase Auth
+    //Autenticar con Supabase Auth
     const { data: authData, error: authError } =
       await supabase.auth.signInWithPassword({
         email,
@@ -105,9 +105,8 @@ export const autenticarUsuario = async (req: Request, res: Response) => {
       .eq("correo_usuario", email)
       .single();
 
-    // 2. Obtener datos adicionales del usuario desde tu tabla
-    // FIX: Comprobar si el perfil de usuario existe.
-    // Si hay un error en la BD o si no se encuentra el usuario, se cierra la sesión y se devuelve un error.
+    //Obtener datos adicionales del usuario desde tu tabla
+    //Si hay un error en la BD o si no se encuentra el usuario, se cierra la sesión y se devuelve un error.
     if (userError || !userData) {
       await supabase.auth.signOut();
       return res.status(404).json({
@@ -138,7 +137,7 @@ export const autenticarUsuario = async (req: Request, res: Response) => {
   }
 };
 
-// Cerrar sesión
+//Cerrar sesión
 export const cerrarSesion = async (req: Request, res: Response) => {
   try {
     const { error } = await supabase.auth.signOut();
@@ -154,10 +153,10 @@ export const cerrarSesion = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener usuario actual
+//Obtener usuario actual
 export const obtenerUsuarioActual = async (req: Request, res: Response) => {
   try {
-    // Verificar sesión
+    //Verificar sesión
     const {
       data: { user },
       error: authError,
@@ -167,7 +166,7 @@ export const obtenerUsuarioActual = async (req: Request, res: Response) => {
       return res.status(401).json({ error: "No autenticado" });
     }
 
-    // Obtener información adicional del usuario
+    //Obtener información adicional del usuario
     const { data: userData, error: userError } = await supabase
       .from("usuario")
       .select("*")
@@ -185,7 +184,7 @@ export const obtenerUsuarioActual = async (req: Request, res: Response) => {
   }
 };
 
-// Middleware de autenticación
+//Middleware de autenticación
 export const autenticarMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,
@@ -213,7 +212,7 @@ export const autenticarMiddleware = async (
   }
 };
 
-// SOLICITAR RESETEO DE CONTRASEÑA
+//solicitar reset contraseña
 export const solicitarReseteoPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
   if (!email) {
@@ -221,13 +220,13 @@ export const solicitarReseteoPassword = async (req: Request, res: Response) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    // Esta es la URL a la que llegará el usuario desde su correo
+    //Esta es la URL a la que llegará el usuario desde su correo
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/update-password`,
   });
 
   if (error) {
     console.error("Error al enviar email de reseteo:", error);
-    // No revelamos si el email existe o no por seguridad
+    //No revelamos si el email existe o no por seguridad
     return res.status(200).json({
       message:
         "Si existe una cuenta con este correo, se ha enviado un enlace para resetear la contraseña.",
@@ -240,7 +239,7 @@ export const solicitarReseteoPassword = async (req: Request, res: Response) => {
   });
 };
 
-// ACTUALIZAR LA CONTRASEÑA DEL USUARIO
+//actualizar contraseña de usuario
 export const actualizarPasswordUsuario = async (
   req: AuthenticatedRequest,
   res: Response
@@ -254,22 +253,21 @@ export const actualizarPasswordUsuario = async (
   }
 
   try {
-    // --- CORRECCIÓN CLAVE ---
-    // 1. Establecemos la sesión en el cliente de Supabase del backend.
+    //Establecemos la sesión en el cliente de Supabase del backend.
     const { error: sessionError } = await supabase.auth.setSession({
       access_token,
       refresh_token,
     });
     if (sessionError) throw sessionError;
 
-    // 2. Ahora que el cliente está "autenticado", actualizamos al usuario.
+    //Ahora que el cliente está autenticado, actualizamos al usuario.
     const { error: updateError } = await supabase.auth.updateUser({
       password: password,
     });
 
     if (updateError) throw updateError;
 
-    // 3. Cerramos la sesión por seguridad.
+    //Cerramos la sesión por seguridad.
     await supabase.auth.signOut();
 
     return res
@@ -277,11 +275,9 @@ export const actualizarPasswordUsuario = async (
       .json({ message: "Contraseña actualizada exitosamente." });
   } catch (error: any) {
     console.error("Error al actualizar la contraseña:", error);
-    return res
-      .status(500)
-      .json({
-        error: "No se pudo actualizar la contraseña.",
-        details: error.message,
-      });
+    return res.status(500).json({
+      error: "No se pudo actualizar la contraseña.",
+      details: error.message,
+    });
   }
 };

@@ -1,5 +1,3 @@
-// fitcontrol_backend/routes/tracker.route.ts
-
 import { Router } from "express";
 import {
   getDietTrackerForToday,

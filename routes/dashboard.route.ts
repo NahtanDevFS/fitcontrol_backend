@@ -1,5 +1,3 @@
-// fitcontrol_backend/routes/dashboard.route.ts
-
 import { Router } from "express";
 import { getDashboardData } from "../controllers/dashboard.controller";
 

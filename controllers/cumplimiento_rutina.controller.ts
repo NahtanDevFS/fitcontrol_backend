@@ -2,7 +2,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Obtener registros de cumplimiento filtrando por id_rutina_dia_semana
+//Obtener registros de cumplimiento filtrando por id_rutina_dia_semana
 export const getCumplimientosRutina = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -23,12 +23,12 @@ export const getCumplimientosRutina = async (req: Request, res: Response) => {
   }
 };
 
-// Crear un nuevo registro de cumplimiento
+//Crear un nuevo registro de cumplimiento
 export const crearCumplimientoRutina = async (req: Request, res: Response) => {
   try {
     const { id_rutina_dia_semana, fecha_a_cumplir, cumplido } = req.body;
 
-    // Validación básica
+    //Validación básica
     if (!id_rutina_dia_semana || !fecha_a_cumplir) {
       return res.status(400).json({
         error:
@@ -42,7 +42,7 @@ export const crearCumplimientoRutina = async (req: Request, res: Response) => {
         {
           id_rutina_dia_semana,
           fecha_a_cumplir,
-          cumplido: cumplido || false, // Valor por defecto si no se proporciona
+          cumplido: cumplido || false, //Valor por defecto si no se proporciona
         },
       ])
       .select()
@@ -59,13 +59,13 @@ export const crearCumplimientoRutina = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar un registro de cumplimiento
+//Actualizar un registro de cumplimiento
 export const actualizarCumplimientoRutina = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const { id } = req.params; // id_cumplimiento_rutina
+    const { id } = req.params; //id_cumplimiento_rutina
     const { cumplido } = req.body;
 
     if (cumplido === undefined) {
@@ -92,7 +92,7 @@ export const actualizarCumplimientoRutina = async (
   }
 };
 
-// Eliminar un registro de cumplimiento
+//Eliminar un registro de cumplimiento
 export const eliminarCumplimientoRutina = async (
   req: Request,
   res: Response
@@ -100,7 +100,7 @@ export const eliminarCumplimientoRutina = async (
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("cumplimiento_rutina")
       .select("id_cumplimiento_rutina")
@@ -113,7 +113,7 @@ export const eliminarCumplimientoRutina = async (
         .json({ error: "Registro de cumplimiento no encontrado" });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase
       .from("cumplimiento_rutina")
       .delete()
@@ -126,14 +126,14 @@ export const eliminarCumplimientoRutina = async (
       });
     }
 
-    res.status(204).send(); // 204 No Content
+    res.status(204).send(); //204 No Content
   } catch (error) {
     console.error("Error al eliminar el registro de cumplimiento:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
-// Obtener cumplimientos por fecha específica
+//Obtener cumplimientos por fecha específica
 export const getCumplimientosPorFecha = async (req: Request, res: Response) => {
   try {
     const { fecha } = req.params;

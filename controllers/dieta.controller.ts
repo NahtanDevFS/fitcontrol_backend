@@ -11,7 +11,7 @@ const diasSemanaMapa: { [key: number]: string } = {
   6: "Sábado",
 };
 
-// Obtener dietas de un usuario filtrando por id_usuario
+//Obtener dietas de un usuario filtrando por id_usuario
 export const getDietasUsuario = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -32,7 +32,7 @@ export const getDietasUsuario = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener una dieta específica por su ID
+//Obtener una dieta específica por su ID
 export const getDietaById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -57,12 +57,12 @@ export const getDietaById = async (req: Request, res: Response) => {
   }
 };
 
-// Crear una nueva dieta
+//Crear una nueva dieta
 export const crearDieta = async (req: Request, res: Response) => {
   try {
     const { id_usuario, nombre_dieta, fecha_creacion_dieta, estado } = req.body;
 
-    // Validación básica
+    //Validación básica
     if (!id_usuario || !nombre_dieta) {
       return res.status(400).json({
         error: "Los campos id_usuario y nombre_dieta son obligatorios",
@@ -75,8 +75,8 @@ export const crearDieta = async (req: Request, res: Response) => {
         {
           id_usuario,
           nombre_dieta,
-          fecha_creacion_dieta, //new Date().toISOString().split("T")[0], // Fecha actual en formato YYYY-MM-DD
-          estado: estado || 1, // Valor por defecto si no se proporciona
+          fecha_creacion_dieta,
+          estado: estado || 1,
         },
       ])
       .select()
@@ -93,13 +93,13 @@ export const crearDieta = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar una dieta existente
+//Actualizar una dieta existente
 export const actualizarDieta = async (req: Request, res: Response) => {
   try {
     const id_dieta = req.params.id;
     const { nombre_dieta, estado } = req.body;
 
-    // Validar que la dieta existe
+    //Validar que la dieta existe
     const { data: dietaExistente, error: errorExistente } = await supabase
       .from("dieta")
       .select("id_dieta")
@@ -110,12 +110,12 @@ export const actualizarDieta = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Dieta no encontrada" });
     }
 
-    // Campos a actualizar
+    //Campos a actualizar
     const updates: Record<string, any> = {};
     if (nombre_dieta) updates.nombre_dieta = nombre_dieta;
     if (estado !== undefined) updates.estado = estado;
 
-    // Si no hay campos válidos para actualizar
+    //Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
@@ -139,7 +139,7 @@ export const actualizarDieta = async (req: Request, res: Response) => {
   }
 };
 
-// Cambiar el estado de una dieta
+//Cambiar el estado de una dieta
 export const cambiarEstadoDieta = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -166,12 +166,12 @@ export const cambiarEstadoDieta = async (req: Request, res: Response) => {
   }
 };
 
-// Eliminar una dieta
+//Eliminar una dieta
 export const eliminarDieta = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("dieta")
       .select("id_dieta")
@@ -182,7 +182,7 @@ export const eliminarDieta = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Dieta no encontrada" });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase.from("dieta").delete().eq("id_dieta", id);
 
     if (error) {
@@ -192,19 +192,19 @@ export const eliminarDieta = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(204).send(); // 204 No Content
+    res.status(204).send(); //204 No Content
   } catch (error) {
     console.error("Error al eliminar la dieta:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
-// función para obtener los datos de dieta completos del usuario
+//función para obtener los datos de dieta completos del usuario
 export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // ID del usuario
+    const { id } = req.params; //ID del usuario
 
-    // 1. Obtener la dieta principal del usuario con todas sus comidas y alimentos
+    //Obtener la dieta principal del usuario con todas sus comidas y alimentos
     let { data: dieta, error: dietaError } = await supabase
       .from("dieta")
       .select("*, dieta_alimento(*, dieta_alimento_detalle(*))")
@@ -213,7 +213,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
 
     if (dietaError) throw dietaError;
 
-    // Si el usuario no tiene dieta, se crea una por defecto
+    //Si el usuario no tiene dieta, se crea una por defecto
     if (!dieta) {
       const { data: nuevaDieta, error: createError } = await supabase
         .from("dieta")
@@ -223,15 +223,13 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
       if (createError) throw createError;
       dieta = nuevaDieta;
     }
-
-    // --- CORRECCIÓN CLAVE: Asegurarse de que las relaciones son arrays ---
-    // Asegúrate de que las relaciones anidadas sean arrays antes de usarlas.
+    // aseguramiento de que las relaciones anidadas sean arrays antes de usarlas.
     dieta.dieta_alimento = dieta.dieta_alimento || [];
     dieta.dieta_alimento.forEach((comida: any) => {
       comida.dieta_alimento_detalle = comida.dieta_alimento_detalle || [];
     });
 
-    // 2. Obtener todos los registros de cumplimiento para esa dieta
+    //Obtener todos los registros de cumplimiento para esa dieta
     const { data: cumplimientos, error: cumplimientosError } = await supabase
       .from("cumplimiento_dieta_dia")
       .select("*")
@@ -249,7 +247,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
         diasConDieta.add(comida.dia_semana);
     });
 
-    // 3. Calcular la racha
+    //Calcular la racha
     let rachaDieta = 0;
     const hoy = new Date();
     const fechaHoyStr = hoy.toISOString().split("T")[0];
@@ -265,7 +263,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
       }
     }
 
-    // 4. Generar datos del calendario para los últimos 35 días
+    //Generar datos del calendario para los últimos 35 días
     const diasCalendario = [];
     const hoySinHora = new Date(new Date().setHours(0, 0, 0, 0));
     for (let i = 34; i >= 0; i--) {
@@ -287,7 +285,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
       diasCalendario.push({ fecha: dia.toISOString().split("T")[0], status });
     }
 
-    // 5. Formatear la dieta en la estructura que el frontend espera
+    //Formatear la dieta en la estructura que el frontend espera
     const diasMap: { [key: string]: any } = {};
     [
       "Lunes",
@@ -310,7 +308,7 @@ export const getDietaCompletaUsuario = async (req: Request, res: Response) => {
       };
     });
 
-    // 6. Ensamblar y enviar la respuesta completa
+    //Ensamblar y enviar la respuesta completa
     const responsePayload = {
       dieta: { ...dieta, dias: diasMap },
       racha: rachaDieta,

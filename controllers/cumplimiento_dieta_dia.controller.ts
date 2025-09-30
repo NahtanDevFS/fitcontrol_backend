@@ -1,15 +1,15 @@
-// fitcontrol_backend/controllers/cumplimiento_dieta_dia.controller.ts
+//fitcontrol_backend/controllers/cumplimiento_dieta_dia.controller.ts
 
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Actualizar el estado de cumplimiento de un día
+//Actualizar el estado de cumplimiento de un día
 export const actualizarCumplimientoDia = async (
   req: Request,
   res: Response
 ) => {
   try {
-    const { id } = req.params; // Este será el id_cumplimiento_dieta_dia
+    const { id } = req.params; //Este será el id_cumplimiento_dieta_dia
     const { cumplido } = req.body;
 
     if (cumplido === undefined) {

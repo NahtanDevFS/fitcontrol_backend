@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Obtener progreso de usuario filtrando por id_usuario
+//Obtener progreso de usuario filtrando por id_usuario
 export const getProgresoUsuario = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -22,16 +22,12 @@ export const getProgresoUsuario = async (req: Request, res: Response) => {
   }
 };
 
-// Crear un nuevo registro de progreso
+//Crear un nuevo registro de progreso
 export const crearProgresoUsuario = async (req: Request, res: Response) => {
   try {
-    const {
-      id_usuario,
-      peso_actual, // El frontend ahora enviará el peso en KG
-      peso_deseado, // El frontend ahora enviará el peso en KG
-    } = req.body;
+    const { id_usuario, peso_actual, peso_deseado } = req.body;
 
-    // 1. Validación robusta en el backend
+    //Validación robusta en el backend
     if (!id_usuario || !peso_actual || !peso_deseado) {
       return res.status(400).json({
         error:
@@ -54,7 +50,7 @@ export const crearProgresoUsuario = async (req: Request, res: Response) => {
       });
     }
 
-    // 2. Lógica de negocio movida al backend
+    //Lógica de negocio movida al backend
     const objetivo = pd < pa ? "bajar" : "subir";
 
     const { data, error } = await supabase
@@ -65,15 +61,15 @@ export const crearProgresoUsuario = async (req: Request, res: Response) => {
           peso_actual: pa,
           peso_deseado: pd,
           objetivo,
-          estado: 1, // Por defecto, la nueva meta está activa
-          peso_inicial: pa, // El peso inicial es el peso actual al crear la meta
+          estado: 1, //Por defecto, la nueva meta está activa
+          peso_inicial: pa, //El peso inicial es el peso actual al crear la meta
         },
       ])
       .select()
       .single();
 
     if (error) {
-      // Si hay un error de base de datos (ej. usuario no existe), lo capturamos
+      //Si hay un error de base de datos (usuario no existe), lo captura
       return res.status(400).json({ error: error.message });
     }
 
@@ -86,7 +82,7 @@ export const crearProgresoUsuario = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar un registro de progreso
+//Actualizar un registro de progreso
 export const actualizarProgresoUsuario = async (
   req: Request,
   res: Response
@@ -102,7 +98,7 @@ export const actualizarProgresoUsuario = async (
       estado,
     } = req.body;
 
-    // Validar que el registro existe
+    //Validar que el registro existe
     const { data: progresoExistente, error: errorExistente } = await supabase
       .from("progreso_usuario")
       .select("id_progreso")
@@ -115,7 +111,7 @@ export const actualizarProgresoUsuario = async (
         .json({ error: "Registro de progreso no encontrado" });
     }
 
-    // Campos a actualizar
+    //Campos a actualizar
     const updates: Record<string, any> = {};
     if (fecha_inicio_proceso)
       updates.fecha_inicio_proceso = fecha_inicio_proceso;
@@ -125,7 +121,7 @@ export const actualizarProgresoUsuario = async (
     if (objetivo) updates.objetivo = objetivo;
     if (estado !== undefined) updates.estado = estado;
 
-    // Si no hay campos válidos para actualizar
+    //Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
@@ -149,12 +145,12 @@ export const actualizarProgresoUsuario = async (
   }
 };
 
-// Eliminar un registro de progreso
+//Eliminar un registro de progreso
 export const eliminarProgresoUsuario = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("progreso_usuario")
       .select("id_progreso")
@@ -167,7 +163,7 @@ export const eliminarProgresoUsuario = async (req: Request, res: Response) => {
         .json({ error: "Registro de progreso no encontrado" });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase
       .from("progreso_usuario")
       .delete()
@@ -180,25 +176,25 @@ export const eliminarProgresoUsuario = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(204).send(); // 204 No Content
+    res.status(204).send(); //204 No Content
   } catch (error) {
     console.error("Error al eliminar el registro de progreso:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
-// NUEVA FUNCIÓN para obtener el progreso activo y la unidad de peso
+//obtener el progreso activo y la unidad de peso
 export const getProgresoActivoUsuario = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id del usuario
+    const { id } = req.params; //id del usuario
 
-    // Hacemos ambas consultas en paralelo para mayor eficiencia
+    //Hacemos ambas consultas en paralelo para mayor eficiencia
     const [progresoData, usuarioData] = await Promise.all([
       supabase
         .from("progreso_usuario")
         .select("*")
         .eq("id_usuario", id)
-        .eq("estado", 1) // Solo el progreso activo
+        .eq("estado", 1) //Solo el progreso activo
         .maybeSingle(),
       supabase
         .from("usuario")
@@ -207,11 +203,11 @@ export const getProgresoActivoUsuario = async (req: Request, res: Response) => {
         .single(),
     ]);
 
-    // Si hay un error en cualquiera de las consultas, lo manejamos
+    //Si hay un error en cualquiera de las consultas, lo manejamos
     if (progresoData.error) throw progresoData.error;
     if (usuarioData.error) throw usuarioData.error;
 
-    // Combinamos los resultados en una sola respuesta
+    //Combinamos los resultados en una sola respuesta
     const respuesta = {
       progreso: progresoData.data,
       unidad_peso: usuarioData.data?.unidad_peso || "kg",

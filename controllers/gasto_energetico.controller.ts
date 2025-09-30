@@ -1,12 +1,12 @@
-// fitcontrol_backend/controllers/gasto_energetico.controller.ts
+//fitcontrol_backend/controllers/gasto_energetico.controller.ts
 
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Obtener los datos de gasto energético de un usuario
+//Obtener los datos de gasto energético de un usuario
 export const getGastoEnergetico = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id del usuario
+    const { id } = req.params; //id del usuario
     const { data, error } = await supabase
       .from("gasto_energetico")
       .select("*")
@@ -23,13 +23,13 @@ export const getGastoEnergetico = async (req: Request, res: Response) => {
   }
 };
 
-// Crear o actualizar (upsert) los datos de gasto energético
+//Crear o actualizar (upsert) los datos de gasto energético
 export const upsertGastoEnergetico = async (req: Request, res: Response) => {
   try {
     const { id_usuario, sexo, edad, altura_cm, peso_kg, nivel_actividad } =
       req.body;
 
-    // Validación de datos de entrada
+    //Validación de datos de entrada
     if (
       !id_usuario ||
       !sexo ||
@@ -43,7 +43,6 @@ export const upsertGastoEnergetico = async (req: Request, res: Response) => {
         .json({ error: "Todos los campos son requeridos." });
     }
 
-    // --- Lógica de cálculo movida al backend ---
     let tmb = 0;
     if (sexo === "hombre") {
       tmb = 10 * peso_kg + 6.25 * altura_cm - 5 * edad + 5;
@@ -64,7 +63,6 @@ export const upsertGastoEnergetico = async (req: Request, res: Response) => {
         peso_ideal_kg = 45.5 + 2.3 * ((altura_cm - 152.4) / 2.54);
       }
     }
-    //peso_ideal_kg = Math.round(peso_ideal_kg);
 
     const dataToUpsert = {
       id_usuario,

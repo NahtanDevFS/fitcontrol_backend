@@ -22,19 +22,17 @@ import cumplimientoDietaDiaRoutes from "./routes/cumplimiento_dieta_dia.route";
 import trackerRoutes from "./routes/tracker.route";
 
 const app: Express = express();
-
-// Middlewares
-// Middleware de CORS ()
+//Configuración de CORS
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://fitcontrol-frontend.vercel.app"], // Permite solo mi frontend en local y producción
-    credentials: true, // cookies o autenticación basada en sesión
+    origin: ["http://localhost:3000", "https://fitcontrol-frontend.vercel.app"], //Permite solo mi frontend en local y producción
+    credentials: true, //cookies o autenticación basada en sesión
   })
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Ruta de prueba
+//Ruta de prueba
 app.get("/", (req, res) => {
   res.send("API funcionando");
 });

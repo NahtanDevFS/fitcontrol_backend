@@ -17,9 +17,9 @@ export const getRutinasCompletasUsuario = async (
   res: Response
 ) => {
   try {
-    const { id } = req.params; // ID del usuario
+    const { id } = req.params; //ID del usuario
 
-    // 1. Obtener todas las rutinas y la rutina activa en paralelo
+    //Obtener todas las rutinas y la rutina activa en paralelo
     const [rutinasRes, rutinaActivaRes] = await Promise.all([
       supabase
         .from("rutina")
@@ -41,7 +41,7 @@ export const getRutinasCompletasUsuario = async (
     const rutinas = rutinasRes.data || [];
     const rutinaActiva = rutinaActivaRes.data;
 
-    // 2. Calcular Racha y Calendario (solo si hay una rutina activa)
+    //Calcular Racha y Calendario (solo si hay una rutina activa)
     let rachaRutina = 0;
     let calendario = [];
     if (rutinaActiva && rutinaActiva.dias && rutinaActiva.dias.length > 0) {
@@ -110,9 +110,9 @@ export const getRutinasCompletasUsuario = async (
 
 export const getRutinaUsuario = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id del usuario
+    const { id } = req.params; //id del usuario
 
-    // Consulta anidada para traer todo de una vez
+    //Consulta anidada para traer todo de una vez
     const { data, error } = await supabase
       .from("rutina")
       .select(
@@ -143,7 +143,7 @@ export const getRutinaUsuario = async (req: Request, res: Response) => {
       return res.status(500).json({ error: error.message });
     }
 
-    // Cambiamos los nombres de las tablas anidadas para que coincidan con los tipos del frontend
+    //Cambiamos los nombres de las tablas anidadas para que coincidan con los tipos del frontend
     const rutinasFormateadas = data.map((rutina) => ({
       ...rutina,
       dias: rutina.rutina_dia_semana.map((dia) => ({
@@ -163,7 +163,7 @@ export const crearRutina = async (req: Request, res: Response) => {
   try {
     const { id_usuario, nombre_rutina } = req.body;
 
-    // Validación básica
+    //Validación básica
     if (!id_usuario || !nombre_rutina) {
       return res
         .status(400)
@@ -179,7 +179,7 @@ export const crearRutina = async (req: Request, res: Response) => {
         },
       ])
       .select("id_rutina")
-      .single(); // Para obtener el objeto recién creado
+      .single(); //Para obtener el objeto recién creado
 
     if (error) {
       return res.status(400).json({ error: error.message });
@@ -197,7 +197,7 @@ export const actualizarRutina = async (req: Request, res: Response) => {
     const id_rutina = req.params.id;
     const { nombre_rutina, estado } = req.body;
 
-    // Validar que el usuario existe
+    //Validar que el usuario existe
     const { data: rutinaExistente, error: errorExistente } = await supabase
       .from("rutina")
       .select("id_rutina")
@@ -208,12 +208,12 @@ export const actualizarRutina = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rutina no encontrada" });
     }
 
-    // Campos a actualizar
+    //Campos a actualizar
     const updates: Record<string, any> = {};
     if (nombre_rutina) updates.nombre_rutina = nombre_rutina;
     if (estado !== undefined) updates.estado = parseInt(estado);
 
-    // Si no hay campos válidos para actualizar
+    //Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
@@ -239,7 +239,7 @@ export const actualizarRutina = async (req: Request, res: Response) => {
 
 export const eliminarRutina = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id de la rutina
+    const { id } = req.params; //id de la rutina
 
     const { error } = await supabase
       .from("rutina")
@@ -251,7 +251,7 @@ export const eliminarRutina = async (req: Request, res: Response) => {
       return res.status(400).json({ error: error.message });
     }
 
-    res.status(204).send(); // 204 No Content, significa que todo salió bien
+    res.status(204).send(); //204 No Content, significa que todo salió bien
   } catch (error) {
     console.error("Error de servidor al eliminar rutina:", error);
     res.status(500).json({ error: "Error interno del servidor" });
@@ -281,8 +281,7 @@ export const crearRutinaCompleta = async (req: Request, res: Response) => {
       if (diaError) throw diaError;
 
       if (dia.ejercicios && dia.ejercicios.length > 0) {
-        // --- CORRECCIÓN CLAVE AQUÍ ---
-        // Mapeamos explícitamente solo los campos que la BD necesita.
+        //Mapeamos explícitamente solo los campos que la BD necesita.
         const ejerciciosParaInsertar = dia.ejercicios.map((ej: any) => ({
           id_rutina_dia_semana: nuevoDia.id_rutina_dia_semana,
           id_ejercicio: ej.id_ejercicio,
@@ -321,14 +320,14 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
   }
 
   try {
-    // 1. Actualizar el nombre de la rutina
+    //Actualizar el nombre de la rutina
     const { error: updateError } = await supabase
       .from("rutina")
       .update({ nombre_rutina })
       .eq("id_rutina", id_rutina);
     if (updateError) throw updateError;
 
-    // 2. Obtener los días existentes en la base de datos para esta rutina
+    //Obtener los días existentes en la base de datos para esta rutina
     const { data: diasViejos, error: fetchError } = await supabase
       .from("rutina_dia_semana")
       .select("id_rutina_dia_semana, dia_semana")
@@ -340,7 +339,7 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
     );
     const diasNuevosSet = new Set(diasNuevos.map((d: any) => d.dia_semana));
 
-    // 3. Identificar y eliminar los días que ya no existen
+    //Identificar y eliminar los días que ya no existen
     const idsDiasAEliminar = diasViejos
       .filter((d) => !diasNuevosSet.has(d.dia_semana))
       .map((d) => d.id_rutina_dia_semana);
@@ -353,12 +352,12 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
       if (deleteError) throw deleteError;
     }
 
-    // 4. Iterar sobre los días nuevos para agregar o actualizar
+    //Iterar sobre los días nuevos para agregar o actualizar
     for (const diaNuevo of diasNuevos) {
       const idDiaExistente = diasViejosMap.get(diaNuevo.dia_semana);
 
       if (idDiaExistente) {
-        // Si el día ya existe, solo actualizamos sus ejercicios
+        //Si el día ya existe, solo actualizamos sus ejercicios
         const { error: deleteEjerciciosError } = await supabase
           .from("rutina_dia_semana_ejercicio")
           .delete()
@@ -379,7 +378,7 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
           if (insertEjerciciosError) throw insertEjerciciosError;
         }
       } else {
-        // Si es un día nuevo, lo creamos junto con sus ejercicios
+        //Si es un día nuevo, lo creamos junto con sus ejercicios
         const { data: nuevoDia, error: diaError } = await supabase
           .from("rutina_dia_semana")
           .insert({ id_rutina, dia_semana: diaNuevo.dia_semana })
@@ -418,7 +417,7 @@ export const actualizarRutinaCompleta = async (req: Request, res: Response) => {
 
 export const getRutinaById = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // id de la rutina
+    const { id } = req.params; //id de la rutina
 
     const { data, error } = await supabase
       .from("rutina")
@@ -442,11 +441,11 @@ export const getRutinaById = async (req: Request, res: Response) => {
       `
       )
       .eq("id_rutina", id)
-      .single(); // <-- CLAVE: Asegura que devuelve un solo objeto, no un array
+      .single(); //Asegura que devuelve un solo objeto, no un array
 
     if (error) {
       console.error("Error de Supabase:", error);
-      // Si no encuentra la rutina, single() devuelve un error.
+      //Si no encuentra la rutina, single() devuelve un error.
       if (error.code === "PGRST116") {
         return res.status(404).json({ error: "Rutina no encontrada" });
       }
@@ -457,7 +456,7 @@ export const getRutinaById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rutina no encontrada" });
     }
 
-    // El alias en la query ya formatea la data, así que la podemos enviar directamente.
+    //El alias en la query ya formatea la data, así que la podemos enviar directamente.
     res.json(data);
   } catch (error) {
     console.error("Error al obtener la rutina por ID:", error);

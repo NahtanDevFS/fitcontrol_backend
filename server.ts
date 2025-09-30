@@ -1,18 +1,18 @@
 import app from "./index";
 import { config } from "dotenv";
 
-// Cargar variables de entorno
+//Cargar variables de entorno
 config();
 
-// Configuración del puerto
+//Configuración del puerto
 const PORT = process.env.PORT || 3001;
 
-// Iniciar servidor
+//Iniciar servidor
 const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
 });
 
-// Manejo de errores de inicio del servidor
+//Manejo de errores de inicio del servidor
 server.on("error", (error: NodeJS.ErrnoException) => {
   if (error.syscall !== "listen") throw error;
 
@@ -30,7 +30,7 @@ server.on("error", (error: NodeJS.ErrnoException) => {
   }
 });
 
-// Manejo de señales de terminación
+//Manejo de señales de terminación
 process.on("SIGINT", () => {
   console.log("\nApagando servidor...");
   server.close(() => {

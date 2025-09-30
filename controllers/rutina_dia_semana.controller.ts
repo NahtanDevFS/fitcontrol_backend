@@ -26,7 +26,7 @@ export const crearRutinaDia = async (req: Request, res: Response) => {
   try {
     const { id_rutina, dia_semana } = req.body;
 
-    // Validación básica
+    //Validación básica
     if (!id_rutina || !dia_semana) {
       return res
         .status(400)
@@ -42,7 +42,7 @@ export const crearRutinaDia = async (req: Request, res: Response) => {
         },
       ])
       .select()
-      .single(); // Para obtener el objeto recién creado
+      .single(); //Para obtener el objeto recién creado
 
     if (error) {
       return res.status(400).json({ error: error.message });
@@ -60,7 +60,7 @@ export const actualizarRutinaDia = async (req: Request, res: Response) => {
     const id_rutina_dia_semana = req.params.id;
     const { dia_semana } = req.body;
 
-    // Validar que la rutina existe
+    //Validar que la rutina existe
     const { data: rutinaDiaExistente, error: errorExistente } = await supabase
       .from("rutina_dia_semana")
       .select("id_rutina_dia_semana")
@@ -71,12 +71,11 @@ export const actualizarRutinaDia = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rutina del día no encontrada" });
     }
 
-    // Campos a actualizar
+    //Campos a actualizar
     const updates: Record<string, any> = {};
     if (dia_semana) updates.dia_semana = dia_semana;
-    //if (estado !== undefined) updates.estado = parseInt(estado);
 
-    // Si no hay campos válidos para actualizar
+    //Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
@@ -105,7 +104,7 @@ export const eliminarRutinaDia = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("rutina_dia_semana")
       .select("id_rutina_dia_semana")
@@ -116,7 +115,7 @@ export const eliminarRutinaDia = async (req: Request, res: Response) => {
       return res.status(404).json({ error: "Rutina del día no encontrada" });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase
       .from("rutina_dia_semana")
       .delete()
@@ -129,7 +128,7 @@ export const eliminarRutinaDia = async (req: Request, res: Response) => {
       });
     }
 
-    res.status(204).send(); // 204 No Content
+    res.status(204).send(); //204 No Content
   } catch (error) {
     console.error("Error al eliminar rutina del día:", error);
     res.status(500).json({ error: "Error interno del servidor" });

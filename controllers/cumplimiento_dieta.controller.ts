@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Obtener cumplimientos de dieta por usuario
+//Obtener cumplimientos de dieta por usuario
 export const getCumplimientosDietaUsuario = async (
   req: Request,
   res: Response
@@ -14,15 +14,6 @@ export const getCumplimientosDietaUsuario = async (
       .from("cumplimiento_dieta")
       .select("*")
       .eq("id_usuario", id_usuario);
-
-    // Filtrar por rango de fechas si se proporciona
-    // if (fecha_inicio && fecha_fin) {
-    //   query = query
-    //     .gte("fecha_a_cumplir_dieta", fecha_inicio)
-    //     .lte("fecha_a_cumplir_dieta", fecha_fin);
-    // }
-
-    // query = query.order("fecha_a_cumplir_dieta", { ascending: false });
 
     const { data, error } = await query;
 
@@ -37,7 +28,7 @@ export const getCumplimientosDietaUsuario = async (
   }
 };
 
-// Obtener cumplimientos por dieta específica
+//Obtener cumplimientos por dieta específica
 export const getCumplimientosPorDietaAlimento = async (
   req: Request,
   res: Response
@@ -61,26 +52,19 @@ export const getCumplimientosPorDietaAlimento = async (
   }
 };
 
-// Registrar un nuevo cumplimiento de dieta
+//Registrar un nuevo cumplimiento de dieta
 export const crearCumplimientoDieta = async (req: Request, res: Response) => {
   try {
     const { id_usuario, id_dieta_alimento, fecha_a_cumplir_dieta, cumplido } =
       req.body;
 
-    // Validación básica
+    //Validación básica
     if (!id_usuario || !id_dieta_alimento || !fecha_a_cumplir_dieta) {
       return res.status(400).json({
         error:
           "Los campos id_usuario, id_dieta_alimento y fecha_a_cumplir_dieta son obligatorios",
       });
     }
-
-    // Validar formato de fecha (YYYY-MM-DD)
-    // if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_a_cumplir_dieta)) {
-    //   return res.status(400).json({
-    //     error: "Formato de fecha inválido. Use YYYY-MM-DD",
-    //   });
-    // }
 
     const { data, error } = await supabase
       .from("cumplimiento_dieta")
@@ -106,7 +90,7 @@ export const crearCumplimientoDieta = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar estado de cumplimiento
+//Actualizar estado de cumplimiento
 export const actualizarCumplimientoDieta = async (
   req: Request,
   res: Response
@@ -121,7 +105,7 @@ export const actualizarCumplimientoDieta = async (
       });
     }
 
-    // Verificar existencia del registro
+    //Verificar existencia del registro
     const { data: registroExistente, error: errorExistente } = await supabase
       .from("cumplimiento_dieta")
       .select("id_cumplimiento_dieta")
@@ -152,7 +136,7 @@ export const actualizarCumplimientoDieta = async (
   }
 };
 
-// Eliminar un registro de cumplimiento
+//Eliminar un registro de cumplimiento
 export const eliminarCumplimientoDieta = async (
   req: Request,
   res: Response
@@ -160,7 +144,7 @@ export const eliminarCumplimientoDieta = async (
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("cumplimiento_dieta")
       .select("id_cumplimiento_dieta")
@@ -173,7 +157,7 @@ export const eliminarCumplimientoDieta = async (
       });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase
       .from("cumplimiento_dieta")
       .delete()
@@ -193,7 +177,7 @@ export const eliminarCumplimientoDieta = async (
   }
 };
 
-// Obtener resumen de cumplimiento por fecha
+//Obtener resumen de cumplimiento por fecha
 export const getResumenCumplimientoFecha = async (
   req: Request,
   res: Response
@@ -201,7 +185,7 @@ export const getResumenCumplimientoFecha = async (
   try {
     const { id_usuario, fecha } = req.params;
 
-    // Validar formato de fecha
+    //Validar formato de fecha
     if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
       return res.status(400).json({
         error: "Formato de fecha inválido. Use YYYY-MM-DD",
@@ -218,7 +202,7 @@ export const getResumenCumplimientoFecha = async (
       return res.status(500).json({ error: error.message });
     }
 
-    // Calcular resumen
+    //Calcular resumen
     const total = data?.length || 0;
     const cumplidos = data?.filter((item) => item.cumplido).length || 0;
     const porcentaje = total > 0 ? Math.round((cumplidos / total) * 100) : 0;

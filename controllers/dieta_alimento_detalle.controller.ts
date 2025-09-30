@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Obtener detalles de alimentos de una dieta_alimento
+//Obtener detalles de alimentos de una dieta_alimento
 export const getDetalleAlimentoDieta = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -22,7 +22,7 @@ export const getDetalleAlimentoDieta = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener un detalle específico por ID
+//Obtener un detalle específico por ID
 export const getDetalleAlimentoById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -49,7 +49,7 @@ export const getDetalleAlimentoById = async (req: Request, res: Response) => {
   }
 };
 
-// Crear un nuevo detalle de alimento
+//Crear un nuevo detalle de alimento
 export const crearDetalleAlimento = async (req: Request, res: Response) => {
   try {
     const {
@@ -64,14 +64,14 @@ export const crearDetalleAlimento = async (req: Request, res: Response) => {
       gramos_alimento,
     } = req.body;
 
-    // Validación de datos esenciales
+    //Validación de datos esenciales
     if (!id_dieta || !dia_semana || !tiempo_comida || !nombre_alimento) {
       return res
         .status(400)
         .json({ error: "Faltan datos requeridos para añadir el alimento." });
     }
 
-    // 1. Busca si ya existe un registro para esa comida en ese día
+    //Busca si ya existe un registro para esa comida en ese día
     let { data: meal } = await supabase
       .from("dieta_alimento")
       .select("id_dieta_alimento")
@@ -81,7 +81,7 @@ export const crearDetalleAlimento = async (req: Request, res: Response) => {
       .maybeSingle();
 
     let mealId;
-    // 2. Si no existe, lo crea
+    //Si no existe, lo crea
     if (!meal) {
       const { data: newMeal, error: newMealError } = await supabase
         .from("dieta_alimento")
@@ -95,7 +95,7 @@ export const crearDetalleAlimento = async (req: Request, res: Response) => {
       mealId = meal.id_dieta_alimento;
     }
 
-    // 3. Inserta el detalle del alimento con el ID de la comida correcto
+    //Inserta el detalle del alimento con el ID de la comida correcto
     const { data: newDetail, error: detailError } = await supabase
       .from("dieta_alimento_detalle")
       .insert({
@@ -121,7 +121,7 @@ export const crearDetalleAlimento = async (req: Request, res: Response) => {
   }
 };
 
-// Actualizar un detalle de alimento
+//Actualizar un detalle de alimento
 export const actualizarDetalleAlimento = async (
   req: Request,
   res: Response
@@ -138,7 +138,7 @@ export const actualizarDetalleAlimento = async (
       gramos_alimento,
     } = req.body;
 
-    // Validar que el registro existe
+    //Validar que el registro existe
     const { data: detalleExistente, error: errorExistente } = await supabase
       .from("dieta_alimento_detalle")
       .select("id_dieta_alimento_detalle")
@@ -151,12 +151,12 @@ export const actualizarDetalleAlimento = async (
         .json({ error: "Detalle de alimento no encontrado" });
     }
 
-    // Campos a actualizar
+    //Campos a actualizar
     const updates: Record<string, any> = {};
     if (nombre_alimento) updates.nombre_alimento = nombre_alimento;
     if (tipo_alimento) updates.tipo_alimento = tipo_alimento;
 
-    // Validar y actualizar campos numéricos
+    //Validar y actualizar campos numéricos
     const camposNutricionales = [
       "calorias_alimento",
       "proteina_alimento",
@@ -176,7 +176,7 @@ export const actualizarDetalleAlimento = async (
       }
     });
 
-    // Si no hay campos válidos para actualizar
+    //Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res.status(400).json({
         error: "No se proporcionaron campos válidos para actualizar",
@@ -200,12 +200,12 @@ export const actualizarDetalleAlimento = async (
   }
 };
 
-// Eliminar un detalle de alimento
+//Eliminar un detalle de alimento
 export const eliminarDetalleAlimento = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Verificar existencia
+    //Verificar existencia
     const { error: verifyError } = await supabase
       .from("dieta_alimento_detalle")
       .select("id_dieta_alimento_detalle")
@@ -218,7 +218,7 @@ export const eliminarDetalleAlimento = async (req: Request, res: Response) => {
         .json({ error: "Detalle de alimento no encontrado" });
     }
 
-    // Eliminación
+    //Eliminación
     const { error } = await supabase
       .from("dieta_alimento_detalle")
       .delete()
@@ -238,7 +238,7 @@ export const eliminarDetalleAlimento = async (req: Request, res: Response) => {
   }
 };
 
-// Obtener resumen nutricional por id_dieta_alimento
+//Obtener resumen nutricional por id_dieta_alimento
 export const getResumenNutricional = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

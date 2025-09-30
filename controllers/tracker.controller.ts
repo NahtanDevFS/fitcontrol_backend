@@ -13,8 +13,6 @@ const diasSemanaMapa: { [key: number]: string } = {
   6: "Sábado",
 };
 
-// --- FUNCIÓN AUXILIAR MODIFICADA ---
-// Ahora calcula la fecha y el día basados en un offset de UTC.
 // Para Guatemala (CST), el offset es -6 horas.
 const getFechaLocal = (offsetHoras = -6) => {
   const ahoraUTC = new Date();
@@ -41,7 +39,7 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
     //const hoy = new Date();
     const { fechaStr: fechaHoyStr, nombreDia: nombreDiaHoy } = getFechaLocal();
 
-    // 1. Obtener dieta activa
+    //Obtener dieta activa
     const { data: dieta } = await supabase
       .from("dieta")
       .select("id_dieta, dias:dieta_alimento(*)")
@@ -50,17 +48,16 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
       .single();
     if (!dieta) return res.json({ diaCumplido: false, comidasDeHoy: [] });
 
-    // --- CORRECCIÓN CLAVE ---
     const diasDeDieta = dieta.dias || [];
 
-    // 2. Filtrar comidas programadas para hoy
+    //Filtrar comidas programadas para hoy
     const comidasProgramadas = diasDeDieta.filter(
       (d: any) => d.dia_semana === nombreDiaHoy && d.id_dieta_alimento
     );
     if (comidasProgramadas.length === 0)
       return res.json({ diaCumplido: false, comidasDeHoy: [] });
 
-    // 3. Verificar o crear registro del DÍA
+    //Verificar o crear registro del dia
     let { data: diaData } = await supabase
       .from("cumplimiento_dieta_dia")
       .select("id, cumplido")
@@ -81,7 +78,7 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
       diaData = nuevoDiaData;
     }
 
-    // 4. Verificar o crear registros de CADA COMIDA
+    //Verificar o crear registros de cada comida
     const idsComidas = comidasProgramadas.map((c: any) => c.id_dieta_alimento!);
     const { data: comidasData } = await supabase
       .from("cumplimiento_dieta")
@@ -108,7 +105,7 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
       await supabase.from("cumplimiento_dieta").insert(comidasACrear);
     }
 
-    // 5. Volver a pedir los datos para tenerlos todos
+    //Volver a pedir los datos para tenerlos todos
     const { data: finalComidasData } = await supabase
       .from("cumplimiento_dieta")
       .select("*")
@@ -116,7 +113,7 @@ export const getDietTrackerForToday = async (req: Request, res: Response) => {
       .eq("fecha_a_cumplir_dieta", fechaHoyStr)
       .in("id_dieta_alimento", idsComidas);
 
-    // 6. Formatear y enviar respuesta
+    //Formatear y enviar respuesta
     const comidasDeHoy = comidasProgramadas.map((comida: any) => {
       const registro = finalComidasData?.find(
         (c) => c.id_dieta_alimento === comida.id_dieta_alimento
@@ -147,10 +144,9 @@ export const getRoutineTrackerForToday = async (
 ) => {
   try {
     const { id } = req.params; // ID del usuario
-    //const hoy = new Date();
     const { fechaStr: fechaHoyStr, nombreDia: nombreDiaHoy } = getFechaLocal();
 
-    // 1. Obtener la rutina activa del usuario
+    //Obtener la rutina activa del usuario
     const { data: rutinaActiva } = await supabase
       .from("rutina")
       .select(
@@ -165,7 +161,7 @@ export const getRoutineTrackerForToday = async (
       return res.json({ diaDeHoy: null, diaCumplido: false });
     }
 
-    // 2. Encontrar el día de rutina que corresponde a hoy
+    //Encontrar el día de rutina que corresponde a hoy
     const rutinaDiaDeHoy = rutinaActiva.dias.find(
       (d: any) => d.dia_semana === nombreDiaHoy
     );
@@ -174,7 +170,7 @@ export const getRoutineTrackerForToday = async (
       return res.json({ diaDeHoy: null, diaCumplido: false });
     }
 
-    // 3. Verificar si ya existe un registro de cumplimiento para hoy, si no, crearlo.
+    //Verificar si ya existe un registro de cumplimiento para hoy, si no, crearlo.
     let { data: cumplimiento } = await supabase
       .from("cumplimiento_rutina")
       .select("id_cumplimiento_rutina, cumplido")

@@ -20,7 +20,6 @@ export const getAllMusculos = async (_req: Request, res: Response) => {
   }
 };
 
-// --- NUEVA FUNCIÓN ---
 export const getMusculosByGrupo = async (req: Request, res: Response) => {
   const { id_grupo } = req.params;
 
@@ -28,7 +27,7 @@ export const getMusculosByGrupo = async (req: Request, res: Response) => {
     const { data, error } = await supabase
       .from("musculo")
       .select("*")
-      .eq("id_grupo", id_grupo); // Filtramos por el id_grupo
+      .eq("id_grupo", id_grupo);
 
     if (error) throw error;
     res.json({ success: true, data });

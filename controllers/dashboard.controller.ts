@@ -1,4 +1,4 @@
-// fitcontrol_backend/controllers/dashboard.controller.ts
+//fitcontrol_backend/controllers/dashboard.controller.ts
 
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
@@ -15,7 +15,7 @@ const diasSemanaMapa: { [key: number]: string } = {
 
 export const getDashboardData = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // ID del usuario
+    const { id } = req.params; //ID del usuario
 
     const [progresoData, rutinaActivaData, dietaActivaData, usuarioData] =
       await Promise.all([
@@ -49,7 +49,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
 
     if (usuarioData.error) throw usuarioData.error;
 
-    // --- Calcular Racha de Rutina ---
+    //Calcular Racha de Rutina
     let rachaRutina = 0;
     if (rutinaActivaData.data && rutinaActivaData.data.dias) {
       const diasConRutina = new Set(
@@ -91,7 +91,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
       }
     }
 
-    // --- Calcular Racha de Dieta ---
+    //Calcular Racha de Dieta
     let rachaDieta = 0;
     if (dietaActivaData.data && dietaActivaData.data.dias) {
       const diasConDieta = new Set<string>();
@@ -131,7 +131,7 @@ export const getDashboardData = async (req: Request, res: Response) => {
       }
     }
 
-    // --- Ensamblar respuesta final ---
+    //respuesta final
     const dashboardData = {
       nombreUsuario: usuarioData.data.nombre_usuario,
       rachaRutina,

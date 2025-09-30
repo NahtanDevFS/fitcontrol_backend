@@ -24,7 +24,7 @@ export const crearUsuario = async (req: Request, res: Response) => {
     const { id_usuario, nombre_usuario, correo_usuario, contrasena_usuario } =
       req.body;
 
-    // Validación básica
+    //Validación básica
     if (
       !id_usuario ||
       !nombre_usuario ||
@@ -62,7 +62,6 @@ export const crearUsuario = async (req: Request, res: Response) => {
 export const actualizarUsuario = async (req: Request, res: Response) => {
   try {
     const id_usuario = req.params.id;
-    // --- 1. AÑADIMOS 'unidad_peso' a la desestructuración ---
     const {
       nombre_usuario,
       correo_usuario,
@@ -71,7 +70,7 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
       unidad_peso,
     } = req.body;
 
-    // Validar que el usuario existe (se mantiene igual)
+    //Validar que el usuario existe
     const { data: usuarioExistente, error: errorExistente } = await supabase
       .from("usuario")
       .select("id_usuario")
@@ -88,10 +87,9 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
     if (correo_usuario) updates.correo_usuario = correo_usuario;
     if (contrasena_usuario) updates.contrasena_usuario = contrasena_usuario;
     if (estado !== undefined) updates.estado = parseInt(estado);
-    // --- 2. AÑADIMOS LA LÓGICA PARA ACTUALIZAR 'unidad_peso' ---
     if (unidad_peso) updates.unidad_peso = unidad_peso;
 
-    // Si no hay campos válidos para actualizar (se mantiene igual)
+    // Si no hay campos válidos para actualizar
     if (Object.keys(updates).length === 0) {
       return res
         .status(400)
@@ -104,7 +102,7 @@ export const actualizarUsuario = async (req: Request, res: Response) => {
       .eq("id_usuario", id_usuario)
       .select(
         "id_usuario, nombre_usuario, correo_usuario, fecha_creacion, estado, unidad_peso"
-      ); // <-- Añadimos unidad_peso a la respuesta
+      );
 
     if (error) {
       return res.status(400).json({ error: error.message });

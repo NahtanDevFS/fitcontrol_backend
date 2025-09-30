@@ -1,5 +1,3 @@
-// fitcontrol_backend/routes/perfil.route.ts
-
 import { Router } from "express";
 import { getProfileData } from "../controllers/perfil.controller";
 

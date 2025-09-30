@@ -20,12 +20,11 @@ export const getAllEjercicios = async (_req: Request, res: Response) => {
   }
 };
 
-// --- NUEVA FUNCIÓN ---
 export const getEjerciciosByMusculo = async (req: Request, res: Response) => {
   const { id_musculo } = req.params;
 
   try {
-    // Consulta para traer ejercicios que pertenecen a un músculo específico
+    //Consulta para traer ejercicios que pertenecen a un músculo específico
     const { data, error } = await supabase
       .from("ejercicio_musculo")
       .select(
@@ -41,7 +40,7 @@ export const getEjerciciosByMusculo = async (req: Request, res: Response) => {
 
     if (error) throw error;
 
-    // La consulta devuelve un arreglo de objetos { ejercicio: { ... } }, lo aplanamos
+    // La consulta devuelve un arreglo de objetos { ejercicio: { ... } }, así que lo aplano
     const ejercicios = data.map((item) => item.ejercicio);
     res.json({ success: true, data: ejercicios });
   } catch (error) {

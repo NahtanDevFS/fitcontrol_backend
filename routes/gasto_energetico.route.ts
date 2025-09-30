@@ -1,5 +1,3 @@
-// fitcontrol_backend/routes/gasto_energetico.route.ts
-
 import { Router } from "express";
 import {
   getGastoEnergetico,
@@ -9,6 +7,6 @@ import {
 const router = Router();
 
 router.get("/:id", getGastoEnergetico);
-router.post("/", upsertGastoEnergetico); // Usamos POST para crear/actualizar
+router.post("/", upsertGastoEnergetico); //Usamos POST para crear/actualizar
 
 export default router;

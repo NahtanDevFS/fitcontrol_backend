@@ -1,9 +1,9 @@
-// fitcontrol_backend/controllers/perfil.controller.ts
+//fitcontrol_backend/controllers/perfil.controller.ts
 
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-// Mapa para convertir el número del día de la semana en su nombre
+//Mapa para convertir el número del día de la semana en su nombre
 const diasSemanaMapa: { [key: number]: string } = {
   0: "Domingo",
   1: "Lunes",
@@ -16,9 +16,9 @@ const diasSemanaMapa: { [key: number]: string } = {
 
 export const getProfileData = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; // ID del usuario
+    const { id } = req.params;
 
-    // --- 1. Obtener datos básicos y progreso ---
+    //Obtener datos básicos y progreso
     const [userProfile, pesoData, rutinaActivaData, dietaActivaData] =
       await Promise.all([
         supabase
@@ -51,7 +51,7 @@ export const getProfileData = async (req: Request, res: Response) => {
 
     if (userProfile.error) throw userProfile.error;
 
-    // --- 2. Calcular Racha de Rutina ---
+    //Calcular Racha de Rutina
     let rachaRutina = 0;
     const diasDeRutina = rutinaActivaData.data?.dias || [];
     if (rutinaActivaData.data && diasDeRutina.length > 0) {
@@ -96,9 +96,9 @@ export const getProfileData = async (req: Request, res: Response) => {
       }
     }
 
-    // --- 3. Calcular Racha de Dieta ---
+    //Calcular Racha de Dieta
     let rachaDieta = 0;
-    const diasDeDieta = dietaActivaData.data?.dias || []; // <-- CORRECCIÓN
+    const diasDeDieta = dietaActivaData.data?.dias || [];
     if (dietaActivaData.data && diasDeDieta.length > 0) {
       const diasConDieta = new Set<string>();
       dietaActivaData.data.dias.forEach((comida: any) => {
@@ -138,7 +138,7 @@ export const getProfileData = async (req: Request, res: Response) => {
       }
     }
 
-    // --- 4. Ensamblar la respuesta ---
+    //Ensamblar la respuesta
     const profileData = {
       nombre_usuario: userProfile.data.nombre_usuario,
       correo_usuario: userProfile.data.correo_usuario,
