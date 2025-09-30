@@ -1,16 +1,16 @@
 import { Router } from "express";
 import {
-  getCumplimientosDietaUsuario,
-  crearCumplimientoDieta,
+  //getCumplimientosDietaUsuario,
+  //crearCumplimientoDieta,
   actualizarCumplimientoDieta,
-  eliminarCumplimientoDieta,
+  //eliminarCumplimientoDieta,
 } from "../controllers/cumplimiento_dieta.controller";
 
 const router = Router();
 
-router.get("/:id", getCumplimientosDietaUsuario);
-router.post("/", crearCumplimientoDieta);
+//router.get("/:id", getCumplimientosDietaUsuario);
+//router.post("/", crearCumplimientoDieta);
 router.put("/:id", actualizarCumplimientoDieta);
-router.delete("/:id", eliminarCumplimientoDieta);
+//router.delete("/:id", eliminarCumplimientoDieta);
 
 export default router;

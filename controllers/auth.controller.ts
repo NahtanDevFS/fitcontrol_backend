@@ -154,63 +154,63 @@ export const cerrarSesion = async (req: Request, res: Response) => {
 };
 
 //Obtener usuario actual
-export const obtenerUsuarioActual = async (req: Request, res: Response) => {
-  try {
-    //Verificar sesión
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+// export const obtenerUsuarioActual = async (req: Request, res: Response) => {
+//   try {
+//     //Verificar sesión
+//     const {
+//       data: { user },
+//       error: authError,
+//     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return res.status(401).json({ error: "No autenticado" });
-    }
+//     if (authError || !user) {
+//       return res.status(401).json({ error: "No autenticado" });
+//     }
 
-    //Obtener información adicional del usuario
-    const { data: userData, error: userError } = await supabase
-      .from("usuario")
-      .select("*")
-      .eq("id_usuario", user.id)
-      .single();
+//     //Obtener información adicional del usuario
+//     const { data: userData, error: userError } = await supabase
+//       .from("usuario")
+//       .select("*")
+//       .eq("id_usuario", user.id)
+//       .single();
 
-    if (userError) {
-      return res.status(404).json({ error: "Perfil de usuario no encontrado" });
-    }
+//     if (userError) {
+//       return res.status(404).json({ error: "Perfil de usuario no encontrado" });
+//     }
 
-    res.json(userData);
-  } catch (error) {
-    console.error("Error al obtener usuario:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-};
+//     res.json(userData);
+//   } catch (error) {
+//     console.error("Error al obtener usuario:", error);
+//     res.status(500).json({ error: "Error interno del servidor" });
+//   }
+// };
 
 //Middleware de autenticación
-export const autenticarMiddleware = async (
-  req: AuthenticatedRequest,
-  res: Response,
-  next: Function
-) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ error: "No autorizado: Falta el token." });
-    }
-    const jwt = authHeader.split(" ")[1];
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(jwt);
+// export const autenticarMiddleware = async (
+//   req: AuthenticatedRequest,
+//   res: Response,
+//   next: Function
+// ) => {
+//   try {
+//     const authHeader = req.headers.authorization;
+//     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+//       return res.status(401).json({ error: "No autorizado: Falta el token." });
+//     }
+//     const jwt = authHeader.split(" ")[1];
+//     const {
+//       data: { user },
+//       error,
+//     } = await supabase.auth.getUser(jwt);
 
-    if (error || !user) {
-      return res.status(401).json({ error: "No autorizado: Token inválido." });
-    }
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error("Error en middleware de autenticación:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-};
+//     if (error || !user) {
+//       return res.status(401).json({ error: "No autorizado: Token inválido." });
+//     }
+//     req.user = user;
+//     next();
+//   } catch (error) {
+//     console.error("Error en middleware de autenticación:", error);
+//     res.status(500).json({ error: "Error interno del servidor" });
+//   }
+// };
 
 //solicitar reset contraseña
 export const solicitarReseteoPassword = async (req: Request, res: Response) => {

@@ -19,45 +19,45 @@ export const getAllUsuarios = async (_req: Request, res: Response) => {
   }
 };
 
-export const crearUsuario = async (req: Request, res: Response) => {
-  try {
-    const { id_usuario, nombre_usuario, correo_usuario, contrasena_usuario } =
-      req.body;
+// export const crearUsuario = async (req: Request, res: Response) => {
+//   try {
+//     const { id_usuario, nombre_usuario, correo_usuario, contrasena_usuario } =
+//       req.body;
 
-    //Validación básica
-    if (
-      !id_usuario ||
-      !nombre_usuario ||
-      !correo_usuario ||
-      !contrasena_usuario
-    ) {
-      return res
-        .status(400)
-        .json({ error: "Todos los campos son obligatorios" });
-    }
+//     //Validación básica
+//     if (
+//       !id_usuario ||
+//       !nombre_usuario ||
+//       !correo_usuario ||
+//       !contrasena_usuario
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ error: "Todos los campos son obligatorios" });
+//     }
 
-    const { data, error } = await supabase
-      .from("usuario")
-      .insert([
-        {
-          id_usuario,
-          nombre_usuario,
-          correo_usuario,
-          contrasena_usuario,
-        },
-      ])
-      .select("id_usuario, nombre_usuario, correo_usuario, fecha_creacion");
+//     const { data, error } = await supabase
+//       .from("usuario")
+//       .insert([
+//         {
+//           id_usuario,
+//           nombre_usuario,
+//           correo_usuario,
+//           contrasena_usuario,
+//         },
+//       ])
+//       .select("id_usuario, nombre_usuario, correo_usuario, fecha_creacion");
 
-    if (error) {
-      return res.status(400).json({ error: error.message });
-    }
+//     if (error) {
+//       return res.status(400).json({ error: error.message });
+//     }
 
-    res.status(201).json(data[0]);
-  } catch (error) {
-    console.error("Error al crear usuario:", error);
-    res.status(500).json({ error: "Error interno del servidor" });
-  }
-};
+//     res.status(201).json(data[0]);
+//   } catch (error) {
+//     console.error("Error al crear usuario:", error);
+//     res.status(500).json({ error: "Error interno del servidor" });
+//   }
+// };
 
 export const actualizarUsuario = async (req: Request, res: Response) => {
   try {

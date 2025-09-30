@@ -1,16 +1,16 @@
 import { Router } from "express";
 import {
-  getCumplimientosRutina,
-  crearCumplimientoRutina,
+  //getCumplimientosRutina,
+  //crearCumplimientoRutina,
   actualizarCumplimientoRutina,
-  eliminarCumplimientoRutina,
+  //eliminarCumplimientoRutina,
 } from "../controllers/cumplimiento_rutina.controller";
 
 const router = Router();
 
-router.get("/:id", getCumplimientosRutina);
-router.post("/", crearCumplimientoRutina);
+//router.get("/:id", getCumplimientosRutina);
+//router.post("/", crearCumplimientoRutina);
 router.put("/:id", actualizarCumplimientoRutina);
-router.delete("/:id", eliminarCumplimientoRutina);
+//router.delete("/:id", eliminarCumplimientoRutina);
 
 export default router;
