@@ -1,5 +1,3 @@
-//fitcontrol_backend/controllers/gasto_energetico.controller.ts
-
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 

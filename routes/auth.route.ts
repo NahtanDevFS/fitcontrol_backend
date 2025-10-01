@@ -3,7 +3,6 @@ import {
   registrarUsuario,
   autenticarUsuario,
   cerrarSesion,
-  //obtenerUsuarioActual,
   solicitarReseteoPassword,
   actualizarPasswordUsuario,
 } from "../controllers/auth.controller";
@@ -13,7 +12,6 @@ const router = express.Router();
 router.post("/registro", registrarUsuario);
 router.post("/login", autenticarUsuario);
 router.post("/logout", cerrarSesion);
-//router.get("/usuario", obtenerUsuarioActual);
 
 //Ruta pública para que cualquiera pueda solicitar un reseteo
 router.post("/reset-password", solicitarReseteoPassword);

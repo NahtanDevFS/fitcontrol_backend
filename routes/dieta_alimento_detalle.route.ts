@@ -1,6 +1,5 @@
 import { Router } from "express";
 import {
-  //getDetalleAlimentoDieta,
   crearDetalleAlimento,
   actualizarDetalleAlimento,
   eliminarDetalleAlimento,
@@ -8,7 +7,6 @@ import {
 
 const router = Router();
 
-//router.get("/:id", getDetalleAlimentoDieta);
 router.post("/", crearDetalleAlimento);
 router.put("/:id", actualizarDetalleAlimento);
 router.delete("/:id", eliminarDetalleAlimento);

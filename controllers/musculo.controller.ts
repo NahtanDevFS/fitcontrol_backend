@@ -1,4 +1,3 @@
-//musculo.controller.ts
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 

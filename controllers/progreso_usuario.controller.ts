@@ -1,27 +1,6 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-//Obtener progreso de usuario filtrando por id_usuario
-// export const getProgresoUsuario = async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params;
-//     const { data, error } = await supabase
-//       .from("progreso_usuario")
-//       .select("*")
-//       .eq("id_usuario", id)
-//       .order("fecha_inicio_proceso", { ascending: false });
-
-//     if (error) {
-//       return res.status(500).json({ error: error.message });
-//     }
-
-//     res.json(data);
-//   } catch (error) {
-//     console.error("Error al obtener el progreso del usuario:", error);
-//     res.status(500).json({ error: "Error interno del servidor" });
-//   }
-// };
-
 //Crear un nuevo registro de progreso
 export const crearProgresoUsuario = async (req: Request, res: Response) => {
   try {
@@ -144,44 +123,6 @@ export const actualizarProgresoUsuario = async (
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };
-
-//Eliminar un registro de progreso
-// export const eliminarProgresoUsuario = async (req: Request, res: Response) => {
-//   try {
-//     const { id } = req.params;
-
-//     //Verificar existencia
-//     const { error: verifyError } = await supabase
-//       .from("progreso_usuario")
-//       .select("id_progreso")
-//       .eq("id_progreso", id)
-//       .single();
-
-//     if (verifyError) {
-//       return res
-//         .status(404)
-//         .json({ error: "Registro de progreso no encontrado" });
-//     }
-
-//     //Eliminación
-//     const { error } = await supabase
-//       .from("progreso_usuario")
-//       .delete()
-//       .eq("id_progreso", id);
-
-//     if (error) {
-//       return res.status(400).json({
-//         error: "Error al eliminar",
-//         detalles: error.message,
-//       });
-//     }
-
-//     res.status(204).send(); //204 No Content
-//   } catch (error) {
-//     console.error("Error al eliminar el registro de progreso:", error);
-//     res.status(500).json({ error: "Error interno del servidor" });
-//   }
-// };
 
 //obtener el progreso activo y la unidad de peso
 export const getProgresoActivoUsuario = async (req: Request, res: Response) => {

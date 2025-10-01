@@ -1,5 +1,3 @@
-// fitcontrol_backend/controllers/tracker.controller.ts
-
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 

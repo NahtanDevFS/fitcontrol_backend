@@ -1,5 +1,3 @@
-//fitcontrol_backend/controllers/cumplimiento_dieta_dia.controller.ts
-
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
