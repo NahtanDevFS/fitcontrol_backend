@@ -5,12 +5,10 @@ import {
   cerrarSesion,
   solicitarReseteoPassword,
   actualizarPasswordUsuario,
-  handleGoogleCallback,
 } from "../controllers/auth.controller";
 
 const router = express.Router();
 
-router.get("/google/callback", handleGoogleCallback);
 router.post("/registro", registrarUsuario);
 router.post("/login", autenticarUsuario);
 router.post("/logout", cerrarSesion);
