@@ -221,3 +221,55 @@ export const actualizarPasswordUsuario = async (
     });
   }
 };
+
+export const handleGoogleCallback = async (req: Request, res: Response) => {
+  const { code } = req.query;
+
+  if (typeof code !== "string") {
+    return res
+      .status(400)
+      .redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/login?error=Invalid_code`);
+  }
+
+  try {
+    //Intercambia el código de autorización por una sesión
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (error || !data.session) {
+      throw new Error(error?.message || "No se pudo obtener la sesión.");
+    }
+
+    const { session, user } = data;
+
+    //Busca el perfil del usuario en tu tabla 'public.usuario'
+    const { data: userData, error: userError } = await supabase
+      .from("usuario")
+      .select("*")
+      .eq("id_usuario", user.id)
+      .single();
+
+    if (userError || !userData) {
+      throw new Error("Perfil de usuario no encontrado en la base de datos.");
+    }
+
+    //Establece la cookie de autenticación
+    res.cookie("authToken", session.access_token, {
+      httpOnly: true, //La cookie no es accesible desde JS en el navegador
+      secure: process.env.NODE_ENV !== "development", //'true' en producción
+      maxAge: 86400 * 1000, //1 día en milisegundos
+      sameSite: "lax",
+      path: "/",
+    });
+
+    //Redirige al usuario al dashboard
+    return res.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`);
+  } catch (error: any) {
+    console.error("Error en el callback de Google:", error);
+    //Redirige al login con un mensaje de error
+    return res.redirect(
+      `${process.env.NEXT_PUBLIC_SITE_URL}/login?error=${encodeURIComponent(
+        error.message
+      )}`
+    );
+  }
+};
