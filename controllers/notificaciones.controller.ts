@@ -31,7 +31,7 @@ export const enviarNotificacionRacha = async (req: Request, res: Response) => {
             Ir a mi Dashboard
           </a>
           <p>¡Sigue así!</p>
-          <p><strong>El equipo de FitControl</strong></p>
+          <p><strong>FitControl</strong></p>
         </div>
       `,
     });
