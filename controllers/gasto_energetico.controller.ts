@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
 import { supabase } from "../libs/supabaseClient";
 
-//Obtener los datos de gasto energético de un usuario
 export const getGastoEnergetico = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params; //id del usuario
+    const { id } = req.params;
     const { data, error } = await supabase
       .from("gasto_energetico")
       .select("*")
@@ -21,13 +20,12 @@ export const getGastoEnergetico = async (req: Request, res: Response) => {
   }
 };
 
-//Crear o actualizar (upsert) los datos de gasto energético
+//Crear o actualizar (upsert)
 export const upsertGastoEnergetico = async (req: Request, res: Response) => {
   try {
     const { id_usuario, sexo, edad, altura_cm, peso_kg, nivel_actividad } =
       req.body;
 
-    //Validación de datos de entrada
     if (
       !id_usuario ||
       !sexo ||
