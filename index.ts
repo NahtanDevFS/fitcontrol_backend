@@ -17,6 +17,7 @@ import perfilRoutes from "./routes/perfil.route";
 import dashboardRoutes from "./routes/dashboard.route";
 import cumplimientoDietaDiaRoutes from "./routes/cumplimiento_dieta_dia.route";
 import trackerRoutes from "./routes/tracker.route";
+import notificacionesRoutes from "./routes/notificaciones.route";
 
 const app: Express = express();
 //Configuración de CORS
@@ -52,5 +53,6 @@ app.use("/api/perfil", perfilRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/cumplimiento-dieta-dia", cumplimientoDietaDiaRoutes);
 app.use("/api/tracker", trackerRoutes);
+app.use("/api/notificaciones", notificacionesRoutes);
 
 export default app;
