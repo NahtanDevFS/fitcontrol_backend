@@ -39,6 +39,7 @@ export const upsertGastoEnergetico = async (req: Request, res: Response) => {
         .json({ error: "Todos los campos son requeridos." });
     }
 
+    //Mifflin-St Jeor
     let tmb = 0;
     if (sexo === "hombre") {
       tmb = 10 * peso_kg + 6.25 * altura_cm - 5 * edad + 5;
@@ -51,6 +52,7 @@ export const upsertGastoEnergetico = async (req: Request, res: Response) => {
     const calorias_deficit = Math.round(calorias_mantener * 0.85);
     const calorias_superavit = Math.round(calorias_mantener * 1.15);
 
+    //devine
     let peso_ideal_kg = 0;
     if (altura_cm > 152.4) {
       if (sexo === "hombre") {
